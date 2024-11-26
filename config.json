@@ -1,1 +1,20 @@
-
+{
+    "databases": {
+        "games": {
+            "rds_host": "hiscore-games.ctflad0frv5c.us-east-1.rds.amazonaws.com",
+            "rds_port": "5432",
+            "rds_user": "postgres",
+            "rds_password": "CommercialBehemoth450",
+            "rds_db": "postgres"
+        },
+        "movies": {
+            "rds_host": "hiscore-movies.c26z03a4rope.us-east-1.rds.amazonaws.com",
+            "rds_port": "5432",
+            "rds_user": "postgres",
+            "rds_password": "CommercialBehemoth450",
+            "rds_db": "postgres"
+        }
+    },
+    "server_host": "localhost",
+    "server_port": "8080"
+  }
