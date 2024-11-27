@@ -124,4 +124,65 @@ const gameContaining = async function(req, res) {
 });
 }
 
+const ageAppropriateGames = async function (req, res) {
+  gamesConnection.query(
+    `
+    SELECT name, rating
+    FROM games
+    WHERE esrb_rating->>'name' = 'Everyone'
+    ORDER BY rating DESC;
+  `,
+    (err, data) => {
+      if (err) {
+        console.log(err);
+        res.json([]);
+      } else {
+        res.json(data.rows);
+      }
+    }
+  );
+};
+
+const topMoviesByVotes = async function (req, res) {
+  moviesConnection.query(
+    `
+    SELECT primary_title AS title, num_votes, average_rating
+    FROM title_ratings tr
+    JOIN title_basics tb ON tr.tconst = tb.tconst
+    ORDER BY num_votes DESC
+    LIMIT 5;
+  `,
+    (err, data) => {
+      if (err) {
+        console.log(err);
+        res.json([]);
+      } else {
+        res.json(data.rows);
+      }
+    }
+  );
+};
+
+const topGameGenres = async function (req, res) {
+  gamesConnection.query(
+    `
+    SELECT genre, COUNT(*) AS genre_count, AVG(rating) AS avg_rating
+    FROM games
+    JOIN game_genres gg ON games.id = gg.game_id
+    GROUP BY genre
+    ORDER BY genre_count DESC
+    LIMIT 5;
+
+  `,
+    (err, data) => {
+      if (err) {
+        console.log(err);
+        res.json([]);
+      } else {
+        res.json(data.rows);
+      }
+    }
+  );
+};
+
 module.exports = { movieNumRatings, gameRating, gameContaining, ageAppropriateGames, topMoviesByVotes, topGameGenres };
