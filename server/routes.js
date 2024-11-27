@@ -4,24 +4,38 @@ const config = require("./config.json");
 // Override the default parsing for BIGINT (PostgreSQL type ID 20)
 types.setTypeParser(20, (val) => parseInt(val, 10)); //DO NOT DELETE THIS
 
-// Create PostgreSQL connection using database credentials provided in config.json
-// Do not edit. If the connection fails, make sure to check that config.json is filled out correctly
-const connection = new Pool({
-  host: config.rds_host,
-  user: config.rds_user,
-  password: config.rds_password,
-  port: config.rds_port,
-  database: config.rds_db,
+// database connections
+
+const gamesConnection = new Pool({
+  host: config.databases.games.rds_host,
+  user: config.databases.games.rds_user,
+  password: config.databases.games.rds_password,
+  port: config.databases.games.rds_port,
+  database: config.databases.games.rds_db,
   ssl: {
     rejectUnauthorized: false,
   },
-});
-connection.connect((err) => err && console.log(err));
+})
+gamesConnection.connect((err) => err && console.log(err));
+
+const moviesConnection = new Pool({
+  host: config.databases.movies.rds_host,
+  user: config.databases.movies.rds_user,
+  password: config.databases.movies.rds_password,
+  port: config.databases.movies.rds_port,
+  database: config.databases.movies.rds_db,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+})
+moviesConnection.connect((err) => err && console.log(err));
+
+// handlers 
 
 // Route: GET /movie_num_ratings/:number
 // Returns all movies with a number of ratings above or below a given threshold
 // sorted by average rating and title
-movie_num_ratings = async function(req, res) {
+movieNumRatings = async function(req, res) {
   const num_ratings = req.params.number;
   const below = req.query.comparison == "below" ? true : false;
   if (below) {
@@ -57,7 +71,7 @@ movie_num_ratings = async function(req, res) {
 
 // Route: GET /game_rating/:rating
 // Returns all games with an average rating above/below certain percentage
-game_rating = async function(req, res) {
+gameRating = async function(req, res) {
   const rating = req.params.rating;
   const below = req.query.comparison == "below" ? true : false;
   if (below) {
@@ -93,7 +107,7 @@ game_rating = async function(req, res) {
 
 // Route GET /game_containing/:word
 // returns all games with titles containing a particular word
-const game_containing = async function(req, res) {
+const gameContaining = async function(req, res) {
   const word = req.params.word;
   connection.query(`
     SELECT name, release AS release_year
@@ -109,3 +123,5 @@ const game_containing = async function(req, res) {
   }
 });
 }
+
+module.exports = { movieNumRatings, gameRating, gameContaining, ageAppropriateGames, topMoviesByVotes, topGameGenres };
