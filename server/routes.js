@@ -17,3 +17,95 @@ const connection = new Pool({
   },
 });
 connection.connect((err) => err && console.log(err));
+
+// Route: GET /movie_num_ratings/:number
+// Returns all movies with a number of ratings above or below a given threshold
+// sorted by average rating and title
+movie_num_ratings = async function(req, res) {
+  const num_ratings = req.params.number;
+  const below = req.query.comparison == "below" ? true : false;
+  if (below) {
+    connection.query(`
+      SELECT primary_title AS Title, average_rating 
+      FROM title_basics tb JOIN title_ratings tr ON tb.tconst = tr.tconst 
+      WHERE tr.num_votes < $1
+      ORDER BY average_rating DESC, Title
+    `, [num_ratings], (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json({});
+    } else {
+      res.json(data.rows);
+    }
+  });
+  } else {
+    connection.query(`
+      SELECT primary_title AS Title, average_rating 
+      FROM title_basics tb JOIN title_ratings tr ON tb.tconst = tr.tconst 
+      WHERE tr.num_votes > $1
+      ORDER BY average_rating DESC, Title
+    `, [num_ratings], (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json({});
+    } else {
+      res.json(data.rows);
+    }
+  });
+  }
+}
+
+// Route: GET /game_rating/:rating
+// Returns all games with an average rating above/below certain percentage
+game_rating = async function(req, res) {
+  const rating = req.params.rating;
+  const below = req.query.comparison == "below" ? true : false;
+  if (below) {
+    connection.query(`
+      SELECT name, rating 
+      FROM Games 
+      WHERE g.rating < $1
+      ORDER BY r.Title
+    `, [rating], (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json({});
+    } else {
+      res.json(data.rows);
+    }
+  });
+  } else {
+    connection.query(`
+      SELECT name, rating 
+      FROM Games 
+      WHERE g.rating > $1
+      ORDER BY r.Title
+    `, [rating], (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json({});
+    } else {
+      res.json(data.rows);
+    }
+  });
+  }
+}
+
+// Route GET /game_containing/:word
+// returns all games with titles containing a particular word
+const game_containing = async function(req, res) {
+  const word = req.params.word;
+  connection.query(`
+    SELECT name, release AS release_year
+	  FROM Games
+	  WHERE Games_ratings.Title LIKE $1
+	  ORDER BY release DESC
+  `, [word], (err, data) => {
+  if (err) {
+    console.log(err);
+    res.json({});
+  } else {
+    res.json(data.rows);
+  }
+});
+}
