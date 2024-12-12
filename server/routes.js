@@ -118,7 +118,7 @@ const randomContent = async function (req, res) {
     // SQL query to get a random game
     if (type === 'game') {
       query = `
-        SELECT name AS title, released AS release_year, rating
+        SELECT name AS title, released AS release_date, rating, background_image AS img
         FROM games
         ORDER BY RANDOM() 
         LIMIT 1;

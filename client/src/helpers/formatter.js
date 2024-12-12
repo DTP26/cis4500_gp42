@@ -6,5 +6,8 @@ export function formatDuration(sec) {
 
 export function formatReleaseDate(date) {
   const dateObj = new Date(Date.parse(date));
+  if (isNaN(dateObj.getDate())) {
+    return "Unavailable";
+  }
   return dateObj.toLocaleString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
