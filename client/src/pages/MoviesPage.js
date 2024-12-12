@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Box, Container, Button, TextField, Typography } from '@mui/material';
-import { NavLink } from 'react-router-dom';
 
 const config = require('../config.json');
 
-
 //uses /containing and /gamesMoviesByGenre
 export default function MoviesPage() {
-  const [movieTitle, setMovieTitle] = useState(''); // User's input for the movie title
-  const [games, setGames] = useState([]); // List of games related to the movie
+  const [movieTitle, setMovieTitle] = useState('');
+  const [games, setGames] = useState([]);
 
   // Movie-to-game genre mapping
   const genreMapping = {
@@ -28,7 +26,7 @@ export default function MoviesPage() {
     try {
       console.log(`Searching for movies containing: ${movieTitle}`);
       const genreResponse = await fetch(
-        `http://${config.server_host}:${config.server_port}/containing/movie/${movieTitle}`
+          `http://${config.server_host}:${config.server_port}/containing/movie/${movieTitle}`
       );
       const movies = await genreResponse.json();
       console.log('Movies Response:', movies);
@@ -36,12 +34,6 @@ export default function MoviesPage() {
       let targetGenre = 'Action'; // Default to Action
 
       if (movies.length > 0) {
-        
-        
-        /*const genre = movies[0].genre || 'Action'; // Default to 'Action' if genre is missing
-        console.log('Detected Genre:', genre);*/
-
-        // Find the most common genre among the matched movies
         const genreCounts = {};
         movies.forEach((movie) => {
           const genre = movie.movie_genre || '';
@@ -52,7 +44,7 @@ export default function MoviesPage() {
 
         if (Object.keys(genreCounts).length > 0) {
           const detectedMovieGenre = Object.keys(genreCounts).reduce((a, b) =>
-            genreCounts[a] > genreCounts[b] ? a : b
+              genreCounts[a] > genreCounts[b] ? a : b
           );
           console.log('Detected Movie Genre:', detectedMovieGenre);
 
@@ -63,14 +55,13 @@ export default function MoviesPage() {
         console.log('Detected Mapped Genre:', targetGenre);
 
         const gamesResponse = await fetch(
-          `http://${config.server_host}:${config.server_port}/games_movies_by_genre/${targetGenre}?limit=10`
+            `http://${config.server_host}:${config.server_port}/games_movies_by_genre/${targetGenre}?limit=10`
         );
         const gamesJson = await gamesResponse.json();
         console.log('Fetched Games:', gamesJson);
 
         if (gamesJson.length > 0) {
           setGames(gamesJson);
-          //console.log('set the games');
         } else {
           setGames([]);
           alert('No games found for the detected genre.');
@@ -85,87 +76,117 @@ export default function MoviesPage() {
     }
   };
 
-  const format = { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-evenly' };
-  console.log('Rendered games state:', games);
-
   return (
       <div>
-        <h2 style={{textAlign: "center"}}>Movie2Game Engine</h2>
+        <h2 style={{ textAlign: 'center', fontFamily: "'Orbitron', sans-serif" }}>Movie2Game Engine</h2>
 
         {/* Input Field for Movie Title */}
         <Box m={3} textAlign="center">
-          <TextField
-              label="Enter a Movie Title"
-              variant="standard"
-              value={movieTitle}
-              onChange={(e) => setMovieTitle(e.target.value)}
+            <TextField
+                label="Enter a Movie Title"
+                variant="standard"
+                value={movieTitle}
+                onChange={(e) => setMovieTitle(e.target.value)}
+                style={{
+                    width: '300px',
+                    marginRight: '10px',
+                }}
+                InputProps={{
+                    sx: {
+                        '&:before': {
+                            borderBottom: '2px solid #1e4c10',
+                        },
+                        '&:hover:not(.Mui-disabled):before': {
+                            borderBottom: '2px solid #39ff14',
+                        },
+                        '&:after': {
+                            borderBottom: '2px solid #39ff14',
+                        },
+                    },
+                }}
+                InputLabelProps={{
+                    style: {
+                        color: 'white', // Label color
+                        fontFamily: "'Orbitron', sans-serif",
+                    },
+                }}
+            />
+          <Button
+              variant="contained"
+              onClick={fetchGamesByMovie}
               style={{
-                width: '300px',
-                marginRight: '10px',
+                backgroundColor: '#004d00',
+                color: '#ffffff',
+                border: '1px solid #39ff14',
+                fontFamily: "'Orbitron', sans-serif",
               }}
-              InputProps={{
-                style: {
-                  color: 'white', // Text color
-                },
-                classes: {
-                  notchedOutline: {
-                    borderColor: 'white', // Outline color
-                  },
-                },
-              }}
-              InputLabelProps={{
-                style: {
-                  color: 'white', // Label and placeholder color
-                },
-              }}
-          />
-          <Button variant="contained"
-                  onClick={fetchGamesByMovie}
-                  style={{
-                    backgroundColor: "#004d00", // Background color
-                    color: "#ffffff", // Text color
-                    border: "1px solid #39ff14", // Optional border
-                  }}>
+          >
             VOYAGE
           </Button>
         </Box>
 
         {/* Display Games */}
-        <Container style={format}>
+        <Container
+            style={{
+              display: games.length > 0 ? 'grid' : 'flex',
+              gridTemplateColumns: games.length > 0 ? 'repeat(auto-fill, minmax(250px, 1fr))' : undefined,
+              gap: games.length > 0 ? '20px' : undefined,
+              justifyItems: games.length > 0 ? 'stretch' : undefined,
+              justifyContent: games.length === 0 ? 'center' : undefined,
+              alignItems: games.length === 0 ? 'center' : undefined,
+              height: games.length === 0 ? '100vh' : 'auto',
+              textAlign: games.length === 0 ? 'center' : undefined,
+            }}
+        >
           {games.length > 0 ? (
               games.map((game, index) => (
                   <Box
                       key={index}
                       p={3}
                       m={2}
-                      style={{
-                        background: '#0a0330',
+                      sx={{
+                        width: '250px',
+                        height: '350px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        background: '#2b2e2b',
                         borderRadius: '16px',
                         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                        ':hover': {
+                        '&:hover': {
                           transform: 'scale(1.05)',
                           boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.7)',
                         },
                       }}
                   >
-                    <Typography
-                        variant="h5">{game.game_title || 'Unknown Game'}</Typography>
-                    <Typography
-                        variant="body2">Genre: {game.game_genre || 'Unknown Rating'}</Typography>
+                    <Typography variant="h5" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                      {game.game_title || 'Unknown Game'}
+                    </Typography>
+                    <Typography variant="body2" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                      Genre: {game.game_genre || 'Unknown Rating'}
+                    </Typography>
                     <img
                         src={game.img || '/default-thumbnail.png'}
                         alt={`${game.game_title} Thumbnail`}
                         style={{
-                          width: '150px',
-                          height: '150px',
-                          marginTop: '10px'
+                          width: '100%',
+                          height: '180px',
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          marginTop: '10px',
                         }}
                     />
                   </Box>
               ))
           ) : (
-              <Typography variant="h6" align="center"
-                          style={{marginTop: '20px'}}>
+              <Typography
+                  variant="h6"
+                  style={{
+                    fontFamily: "'Orbitron', sans-serif",
+                    color: '#ffffff',
+                  }}
+              >
                 No games to display.
               </Typography>
           )}

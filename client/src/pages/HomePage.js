@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Card, CardMedia, CardContent, Container, Divider, Link, Grid } from "@mui/material";
+import {
+    Card,
+    CardMedia,
+    CardContent,
+    Container,
+    Divider,
+    Typography,
+    Box,
+} from "@mui/material";
 import { NavLink } from "react-router-dom";
 import { formatReleaseDate } from "../helpers/formatter";
 
@@ -7,13 +15,24 @@ import LazyTable from "../components/LazyTable";
 const config = require("../config.json");
 
 export default function HomePage() {
-    const [gameOfTheDay, setGameOfTheDay] = useState({});
-    const [selectedSongId, setSelectedSongId] = useState(null);
+    const [gameOfTheDay, setGameOfTheDay] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let isMounted = true;
+        setLoading(true);
         fetch(`http://${config.server_host}:${config.server_port}/random?type=game`)
             .then((res) => res.json())
-            .then((resJson) => setGameOfTheDay(resJson));
+            .then((resJson) => {
+                if (isMounted) {
+                    setGameOfTheDay(resJson);
+                    setLoading(false);
+                }
+            });
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const gameColumns = [
@@ -22,9 +41,9 @@ export default function HomePage() {
             headerName: "Title",
             renderCell: (row) => (
                 <span style={{ color: "#ffffff" }}>
-        {row.type === "game" ? "🎮 " : "🎬 "}
+                    {row.type === "game" ? "🎮 " : "🎬 "}
                     {row.title}
-      </span>
+                </span>
             ),
         },
         {
@@ -61,61 +80,133 @@ export default function HomePage() {
     return (
         <Container>
             <h2 style={{ textAlign: "center" }}>Featured:</h2>
-            <div style={{
-                display: "flex",
-                justifyContent: "center",
-                margin: "20px 0"
-            }}>
-                <Card
-                    style={{
-                        maxWidth: "900px",
-                        minHeight: "500px",
-                        borderRadius: "15px",
-                        boxShadow: "0 8px 20px rgba(0, 0, 0, 0.3)",
-                        backgroundColor: "#1a1a1d",
-                        color: "#ffffff",
-                    }}
-                >
-                    {gameOfTheDay.img && (
-                        <CardMedia
-                            component="img"
-                            image={gameOfTheDay.img}
-                            alt={gameOfTheDay.title}
-                            style={{
-                                height: "300px",
-                                objectFit: "cover",
-                                borderRadius: "15px 15px 0 0",
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    margin: "20px 0",
+                }}
+            >
+                {loading ? (
+                    <Card
+                        style={{
+                            width: "80%",
+                            maxWidth: "900px",
+                            minHeight: "500px",
+                            borderRadius: "15px",
+                            boxShadow: "0 8px 20px rgba(0, 0, 0, 0.3)",
+                            backgroundColor: "#1a1a1d",
+                            color: "#ffffff",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                        }}
+                    >
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                fontSize: "1.5rem",
+                                fontFamily: "'Press Start 2P', 'monospace'",
+                                color: "#a0a0a0",
+                                textAlign: "center",
                             }}
-                        />
-                    )}
-                    <CardContent style={{ textAlign: "center" }}>
-                        <h3 style={{
-                            margin: "20px 0",
-                            fontSize: "2rem",
-                            fontFamily: "'Press Start 2P', 'monospace'",
-                        }}>
-                            {gameOfTheDay.title || "Loading..."}
-                        </h3>
-                        {gameOfTheDay.release_date && (
-                            <p style={{
-                                margin: "10px 0",
-                                fontSize: "1.2rem",
-                                color: "#a0a0a0",
-                            }}>
-                                Release Date: {formatReleaseDate(gameOfTheDay.release_date)}
-                            </p>
+                        >
+                            Loading...
+                        </Typography>
+                    </Card>
+                ) : (
+                    <Card
+                        style={{
+                            width: "80%",
+                            maxWidth: "900px",
+                            minHeight: "500px",
+                            borderRadius: "15px",
+                            boxShadow: "0 8px 20px rgba(0, 0, 0, 0.3)",
+                            backgroundColor: "#1a1a1d",
+                            color: "#ffffff",
+                        }}
+                    >
+                        {gameOfTheDay?.img ? (
+                            <CardMedia
+                                component="img"
+                                image={gameOfTheDay.img}
+                                alt={gameOfTheDay.title}
+                                style={{
+                                    height: "300px",
+                                    objectFit: "cover",
+                                    borderRadius: "15px 15px 0 0",
+                                }}
+                            />
+                        ) : (
+                            <div
+                                style={{
+                                    height: "300px",
+                                    backgroundColor: "#333333",
+                                    borderRadius: "15px 15px 0 0",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                }}
+                            >
+                                <Typography
+                                    variant="h5"
+                                    sx={{
+                                        fontSize: "1.5rem",
+                                        fontFamily: "'Press Start 2P', 'monospace'",
+                                        color: "#a0a0a0",
+                                    }}
+                                >
+                                    Loading Image...
+                                </Typography>
+                            </div>
                         )}
-                        {gameOfTheDay.rating !== undefined && (
-                            <p style={{
-                                margin: "10px 0",
-                                fontSize: "1.2rem",
-                                color: "#a0a0a0",
-                            }}>
-                                Rating: {gameOfTheDay.rating || "N/A"}
-                            </p>
-                        )}
-                    </CardContent>
-                </Card>
+                        <CardContent
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                height: "200px",
+                                textAlign: "center",
+                            }}
+                        >
+                            <Typography
+                                variant="h3"
+                                sx={{
+                                    fontSize: "2rem",
+                                    fontFamily: "'Press Start 2P', 'monospace'",
+                                    color: "#ffffff",
+                                }}
+                            >
+                                {gameOfTheDay?.title || "Loading Title..."}
+                            </Typography>
+                            {gameOfTheDay?.release_date && (
+                                <Typography
+                                    variant="body1"
+                                    sx={{
+                                        fontSize: "1rem",
+                                        color: "#a0a0a0",
+                                        marginTop: "10px",
+                                    }}
+                                >
+                                    Release Date: {formatReleaseDate(gameOfTheDay.release_date)}
+                                </Typography>
+                            )}
+                            {gameOfTheDay?.rating !== undefined && (
+                                <Typography
+                                    variant="body1"
+                                    sx={{
+                                        fontSize: "1rem",
+                                        color: "#a0a0a0",
+                                        marginTop: "10px",
+                                    }}
+                                >
+                                    Rating: {gameOfTheDay.rating || "N/A"}
+                                </Typography>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
             </div>
             <Divider />
             <h2>Trending Games</h2>
@@ -128,7 +219,6 @@ export default function HomePage() {
             />
             <Divider />
             <h2>Trending Movies</h2>
-            <Divider />
             <LazyTable
                 route={`http://${config.server_host}:${config.server_port}/top_albums`}
                 columns={albumColumns}

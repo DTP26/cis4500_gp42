@@ -3,11 +3,13 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 
 document.documentElement.style.background = "linear-gradient(180deg, #1a1a1d, #343a40)";
-document.documentElement.style.height = "100%";
-document.body.style.background = "linear-gradient(180deg, #1a1a1d, #343a40)";
+document.documentElement.style.height = "auto";
+document.documentElement.style.minHeight = "100%";
+
+document.body.style.background = "transparent";
 document.body.style.margin = "0";
 document.body.style.padding = "0";
-document.body.style.height = "100%";
+document.body.style.minHeight = "100%";
 document.body.style.color = "#ffffff";
 document.body.style.fontFamily = "'Press Start 2P', 'monospace'";
 
