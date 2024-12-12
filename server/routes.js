@@ -580,7 +580,7 @@ const containing = async function (req, res) {
     } else if (type === 'movie') {
       // Search in the movies table
       query = `
-        SELECT primary_title AS title, start_year AS release_year, 'movie' AS type
+        SELECT primary_title AS title, start_year AS release_year, 'movie' AS type, unnest(string_to_array(genres, ',')) AS movie_genre
         FROM title_basics
         WHERE LOWER(primary_title) LIKE LOWER($1)
         ORDER BY start_year DESC;
