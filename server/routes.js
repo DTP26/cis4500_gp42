@@ -118,7 +118,7 @@ const randomContent = async function (req, res) {
     // SQL query to get a random game
     if (type === 'game') {
       query = `
-        SELECT name AS title, released AS release_date, rating, background_image AS img
+        SELECT name AS title, released AS release_year, rating
         FROM games
         ORDER BY RANDOM() 
         LIMIT 1;
@@ -293,6 +293,46 @@ const gamesMoviesByGenre = async function (req, res) {
 };
 
 
+// Route: GET /games_by_genre/:genre
+// Description: Returns all games of a specific genre. The genre name is passed as a parameter.
+// Parameters:
+//   - genre (required): The genre name to search for in the `game_genres` and `games` tables.
+// Usage Example:
+//   - Request: http://localhost:8080/games_by_genre/RPG
+//     This will return all games that belong to the "RPG" genre.
+// SQL Logic:
+//   - Joins the `game_genres` table with the `games` table on the `game_id` to retrieve games that belong to a specific genre.
+//   - Filters the results by the genre name, which is passed as the `genre` parameter.
+//   - Orders the results by the game release date in descending order (most recent first).
+
+const gamesByGenre = async function (req, res) {
+  const genre = req.params.genre; // Get the genre parameter
+
+  // Validate input
+  if (!genre || genre.trim() === '') {
+    return res.status(400).json({ error: 'The genre parameter is required and cannot be empty.' });
+  }
+
+  try {
+    // SQL query to get all games that belong to a specific genre
+    const query = `
+      SELECT g.name AS game_title, g.released AS release_year, g.rating, g.reviews_count
+      FROM games g
+      JOIN game_genres gg ON gg.game_id = g.id
+      WHERE LOWER(gg.name) = LOWER($1)  -- Search for the genre in a case-insensitive way
+      ORDER BY g.released DESC;  -- Order by release year in descending order
+    `;
+
+    // Execute the query with the parameter
+    const result = await connection.query(query, [genre]);
+
+    // Return the results
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error executing gamesByGenre query:', err);
+    res.status(500).json({ error: 'An error occurred while retrieving the games.' });
+  }
+};
 
 
 
@@ -580,7 +620,7 @@ const containing = async function (req, res) {
     } else if (type === 'movie') {
       // Search in the movies table
       query = `
-        SELECT primary_title AS title, start_year AS release_year, 'movie' AS type, unnest(string_to_array(genres, ',')) AS movie_genre
+        SELECT primary_title AS title, start_year AS release_year, 'movie' AS type
         FROM title_basics
         WHERE LOWER(primary_title) LIKE LOWER($1)
         ORDER BY start_year DESC;
@@ -710,5 +750,6 @@ module.exports = {
   listTables,
   gamesMoviesByGenre,
   importantGamesMovies,
-  randomContent
+  randomContent,
+  gamesByGenre
 };

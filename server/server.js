@@ -24,6 +24,7 @@ app.get("/list-tables", routes.listTables);
 app.get("/games_movies_by_genre/:genre", routes.gamesMoviesByGenre);
 app.get("/important_games_movies/:x/:limit", routes.importantGamesMovies);
 app.get("/random", routes.randomContent);
+app.get("/games_by_genre/:genre", routes.gamesByGenre);
 
 app.listen(config.server_port, () => {
   console.log(
