@@ -118,7 +118,7 @@ const randomContent = async function (req, res) {
     // SQL query to get a random game
     if (type === 'game') {
       query = `
-        SELECT name AS title, released AS release_year, rating
+        SELECT name AS title, released AS release_year, rating, background_image AS img
         FROM games
         ORDER BY RANDOM() 
         LIMIT 1;
@@ -128,7 +128,6 @@ const randomContent = async function (req, res) {
     else if (type === 'movie') {
       query = `
         SELECT primary_title AS title, start_year AS release_year, genres, r.average_rating AS rating
-        FROM title_basics t
         JOIN title_ratings r ON t.tconst = r.tconst
         ORDER BY RANDOM()
         LIMIT 1;
@@ -207,14 +206,14 @@ const importantGamesMovies = async function (req, res) {
       FROM ImportantMovies im)
 
       ORDER BY title DESC  -- Sort by reviews/votes count in descending order
-      --LIMIT $2;  -- Limit the total number of results (games + movies)
+      LIMIT $2;  -- Limit the total number of results (games + movies)
     `;
 
     // Execute the query with the parameters:
     // - $1 = 'x' (minimum reviews/votes)
     // - $2 = 'limit / 2' (half the limit for games and half for movies)
     // - $3 = 'limit' (total number of results)
-    const result = await connection.query(query, [x]);
+    const result = await connection.query(query, [x, limit]);
 
     // Return the results in JSON format
     res.json(result.rows);
