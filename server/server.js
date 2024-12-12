@@ -11,12 +11,16 @@ app.use(
   })
 );
 
-app.get("/movieNumRatings", routes.movieNumRatings);
-app.get("/gameRating", routes.gameRating);
-app.get("/gameContaining", routes.gameContaining);
-app.get("/ageAppropriateGames", routes.ageAppropriateGames);
-app.get("/topMoviesByVotes", routes.topMoviesByVotes);
-app.get("/topGameGenres", routes.topGameGenres);
+app.get("/", routes.helloWorld);
+app.get("/highest_avg_rating", routes.highestAvgRating);
+app.get("/movie_num_ratings/:number", routes.movieNumRatings);
+app.get("/ratings", routes.getRatings);
+app.get("/game_containing/:word", routes.gameContaining);
+// app.get("/age_appropriate_games", routes.ageAppropriateGames);
+app.get("/top_movies", routes.topMoviesByVotes);
+app.get("/top_game_genres", routes.topGameGenres);
+app.get("/test-db", routes.testDatabaseConnections);
+app.get("/list-tables", routes.listTables);
 
 app.listen(config.server_port, () => {
   console.log(
