@@ -1,46 +1,70 @@
-import { AppBar, Container, Toolbar, Typography } from '@mui/material'
+import { AppBar, Container, Toolbar, Typography } from '@mui/material';
 import { NavLink } from 'react-router-dom';
 
-// The hyperlinks in the NavBar contain a lot of repeated formatting code so a
-// helper component NavText local to the file is defined to prevent repeated code.
-function NavText({ href, text, isMain }) {
-  return (
-    <Typography
-      variant={isMain ? 'h5' : 'h7'}
-      noWrap
-      style={{
-        marginRight: '30px',
-        fontFamily: 'monospace',
-        fontWeight: 700,
-        letterSpacing: '.3rem',
-      }}
-    >
-      <NavLink
-        to={href}
-        style={{
-          color: 'inherit',
-          textDecoration: 'none',
-        }}
-      >
-        {text}
-      </NavLink>
-    </Typography>
-  )
+function NavText({ href, text, isMain, color }) {
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '30px' }}>
+            <Typography
+                variant={isMain ? 'h5' : 'h7'}
+                noWrap
+                style={{
+                    fontFamily: isMain ? "'Press Start 2P', 'monospace'" : "'Orbitron', 'monospace'",
+                    fontWeight: 700,
+                    letterSpacing: '.3rem',
+                    color: color || (isMain ? '#39ff14' : '#004d00'),
+                }}
+            >
+                <NavLink
+                    to={href}
+                    style={{
+                        color: 'inherit',
+                        textDecoration: 'none',
+                    }}
+                >
+                    {text}
+                </NavLink>
+            </Typography>
+            {isMain && (
+                <Typography
+                    variant="body2"
+                    style={{
+                        fontFamily: "'Orbitron', 'monospace'",
+                        fontWeight: 400,
+                        fontSize: '0.5rem',
+                        color: '#ffffff',
+                        textAlign: 'center',
+                        marginTop: '1px',
+                    }}
+                >
+                    Holistically Integrated Screen CrossOver Recommendations Engine
+                </Typography>
+            )}
+        </div>
+    );
 }
 
-// Here, we define the NavBar. Note that we heavily leverage MUI components
-// to make the component look nice. Feel free to try changing the formatting
-// props to how it changes the look of the component.
+// NavBar Component
 export default function NavBar() {
-  return (
-    <AppBar position='static'>
-      <Container maxWidth='xl'>
-        <Toolbar disableGutters>
-          <NavText href='/' text='SWIFTIFY' isMain />
-          <NavText href='/albums' text='ALBUMS' />
-          <NavText href='/songs' text='SONGS' />
-        </Toolbar>
-      </Container>
-    </AppBar>
-  );
+    return (
+        <AppBar
+            position="static"
+            style={{
+                background: 'linear-gradient(100deg, #004d00, #39ff14)',
+            }}
+        >
+            <Container maxWidth="xl">
+                <Toolbar
+                    disableGutters
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'space-around',
+                    }}
+                >
+                    <NavText href="/albums" text="MOVIES" color="#39ff14" />
+                    <NavText href="/" text="HI SCORE!" isMain color="#ffffff"/>
+                    <NavText href="/songs" text="GAMES" color="#004d00" />
+                </Toolbar>
+            </Container>
+        </AppBar>
+    );
 }

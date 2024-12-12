@@ -82,7 +82,7 @@ export default function HomePage() {
           {/*        {songOfTheDay.title}*/}
           {/*    </Link>*/}
           {/*</h2>*/}
-          <h2 style={{textAlign: "center"}}>Check out your Game of the Day</h2>
+          <h2 style={{textAlign: "center"}}>Featured:</h2>
           <div style={{
               display: "flex",
               justifyContent: "center",
