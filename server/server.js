@@ -21,6 +21,8 @@ app.get("/top_movies", routes.topMoviesByVotes);
 app.get("/top_game_genres", routes.topGameGenres);
 app.get("/test-db", routes.testDatabaseConnections);
 app.get("/list-tables", routes.listTables);
+app.get("/games_movies_by_genre/:genre", routes.gamesMoviesByGenre);
+app.get("/important_games_movies/:x/:limit", routes.importantGamesMovies);
 
 app.listen(config.server_port, () => {
   console.log(

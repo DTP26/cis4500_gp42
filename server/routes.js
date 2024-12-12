@@ -82,10 +82,151 @@ const listTables = async function (req, res) {
   }
 };
 
+// Route: GET /important_games_movies/:x/:limit
+// Description: 
+// Returns the top 'limit' number of games and movies with more than 'x' reviews or votes, respectively, 
+// sorted by the number of reviews or votes. The results are divided equally between games and movies. 
+// The 'limit' parameter defines how many total records (games + movies) to return, while 'x' defines 
+// the minimum number of reviews (for games) or votes (for movies) required.
+//
+// Example Usage:
+// - Request: http://localhost:8080/important_games_movies/1000/50
+//   This will return 50 games and 50 movies, each having more than 1000 reviews or votes,
+//   ordered by their review/vote counts in descending order.
+
+const importantGamesMovies = async function (req, res) {
+  const x = req.params.x;  // Minimum number of reviews (for games) or votes (for movies)
+  const limit = req.params.limit;  // The total number of results to return (games + movies)
+
+  try {
+    const query = `
+      -- Select the top-rated games with more than 'x' reviews
+      WITH ImportantGames AS (
+        SELECT g.id AS game_id, g.name AS game_title, g.reviews_count, g.rating
+        FROM games g
+        WHERE CAST(g.reviews_count AS INTEGER) > $1  -- Only games with more than 'x' reviews
+        ORDER BY g.reviews_count DESC  -- Sort games by reviews_count in descending order
+        --LIMIT $2  -- Limit the number of games to 'limit / 2'
+      ),
+      -- Select the top-rated movies with more than 'x' votes
+      ImportantMovies AS (
+        SELECT t.tconst AS movie_id, t.primary_title AS movie_title, r.num_votes, r.average_rating
+        FROM title_basics t
+        JOIN title_ratings r ON t.tconst = r.tconst
+        WHERE CAST(r.num_votes AS INTEGER) > $1  -- Only movies with more than 'x' votes
+        ORDER BY r.num_votes DESC  -- Sort movies by num_votes in descending order
+        -- LIMIT $2  -- Limit the number of movies to 'limit / 2'
+      )
+
+      -- Combine results from games and movies
+      (SELECT
+        ig.game_title AS title,  -- Title of the game
+        ig.reviews_count AS reviews_count,  -- Number of reviews for the game
+        ig.rating AS game_rating,  -- Rating of the game
+        'game' AS type  -- Indicate the type is a game
+      FROM ImportantGames ig)
+
+      UNION ALL
+
+      (SELECT
+        im.movie_title AS title,  -- Title of the movie
+        CAST(im.num_votes AS INTEGER) AS reviews_count,  -- Explicitly cast num_votes to INTEGER
+        im.average_rating AS game_rating,  -- Rating of the movie
+        'movie' AS type  -- Indicate the type is a movie
+      FROM ImportantMovies im)
+
+      ORDER BY reviews_count DESC  -- Sort by reviews/votes count in descending order
+      --LIMIT $2;  -- Limit the total number of results (games + movies)
+    `;
+
+    // Execute the query with the parameters:
+    // - $1 = 'x' (minimum reviews/votes)
+    // - $2 = 'limit / 2' (half the limit for games and half for movies)
+    // - $3 = 'limit' (total number of results)
+    const result = await connection.query(query, [x]);
+
+    // Return the results in JSON format
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error executing importantGamesMovies query:', err);
+    res.status(500).json({ error: 'An error occurred while fetching important games and movies.' });
+  }
+};
 
 
 
 
+
+// Route: GET /games_movies_by_genre/:genre
+// Description: Returns a list of games and movies that share the specified genre, 
+// along with their average ratings, ordered by their average ratings in descending order.
+// Parameters:
+//   - genre (required): The genre to filter by (e.g., "Action").
+//   - limit (optional): The maximum number of results to return (default is 10).
+// Usage Example:
+//   - Request: http://localhost:8080/games_movies_by_genre/Action?limit=500
+//     This will return up to 500 games and movies that share the genre "Action", including their average ratings, ordered by rating.
+
+const gamesMoviesByGenre = async function (req, res) {
+  const genre = req.params.genre;  // Genre to filter by
+  const limit = req.query.limit || 10;  // Default limit is 10 if not specified
+
+  // Validate input
+  if (!genre || genre.trim() === '') {
+    return res.status(400).json({ error: 'The genre parameter is required and cannot be empty.' });
+  }
+
+  try {
+    const query = `
+      -- Select games and movies that match the genre, limited by the genre and number of results
+      WITH GameGenres AS (
+        SELECT g.id AS game_id, g.name AS game_title, gg.name AS game_genre
+        FROM game_genres gg
+        JOIN games g ON gg.game_id = g.id
+        WHERE LOWER(gg.name) = LOWER($1)  -- Case-insensitive genre filter
+        LIMIT $2
+      ),
+      MovieGenres AS (
+        SELECT t.tconst AS movie_id, t.primary_title AS movie_title, unnest(string_to_array(t.genres, ',')) AS movie_genre
+        FROM title_basics t
+        WHERE t.genres IS NOT NULL
+        AND LOWER(t.genres) LIKE LOWER($1)  -- Case-insensitive genre filter
+        LIMIT $2
+      )
+      
+      SELECT
+        g.game_title,
+        g.game_genre,
+        t.primary_title,
+        r.average_rating AS movie_rating,
+        g.game_genre AS shared_genre,
+        'game' AS type
+      FROM GameGenres g
+      JOIN MovieGenres m ON g.game_genre = m.movie_genre
+      LEFT JOIN title_basics t ON m.movie_id = t.tconst
+      LEFT JOIN title_ratings r ON t.tconst = r.tconst
+      ORDER BY r.average_rating DESC
+      LIMIT $2;
+    `;
+
+    // Execute the query with the genre and limit parameters
+    const result = await connection.query(query, [genre, limit]);
+
+    // Return the results
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error executing gamesMoviesByGenre query:', err);
+    res.status(500).json({ error: 'An error occurred while fetching games and movies by genre.' });
+  }
+};
+
+
+
+
+
+
+
+// NONSENSE
 // Route: GET /highest_avg_rating
 // Description: Finds the highest average rating received by a movie and the highest average rating received by a game 
 //              for each year within a specified range. Results are grouped by release year, movie title, and game title.
@@ -478,5 +619,7 @@ module.exports = {
   topMoviesByVotes, 
   topGameGenres, 
   testDatabaseConnections, 
-  listTables 
+  listTables,
+  gamesMoviesByGenre,
+  importantGamesMovies 
 };
