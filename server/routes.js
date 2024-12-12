@@ -82,6 +82,11 @@ const listTables = async function (req, res) {
   }
 };
 
+//////////////////////////////////////////////UTIL ROUTES ////////////////////////////////////////////////////
+
+
+
+
 // Route: GET /random
 // Description: This route returns a random game or movie based on the provided 'type' parameter.
 // Parameters:
@@ -147,6 +152,7 @@ const randomContent = async function (req, res) {
 };
 
 
+// NONSENSICAL!!!!!!!!!!!!!
 // Route: GET /important_games_movies/:x/:limit
 // Description: 
 // Returns the top 'limit' number of games and movies with more than 'x' reviews or votes, respectively, 
@@ -200,7 +206,7 @@ const importantGamesMovies = async function (req, res) {
         'movie' AS type  -- Indicate the type is a movie
       FROM ImportantMovies im)
 
-      ORDER BY reviews_count DESC  -- Sort by reviews/votes count in descending order
+      ORDER BY title DESC  -- Sort by reviews/votes count in descending order
       --LIMIT $2;  -- Limit the total number of results (games + movies)
     `;
 
@@ -529,42 +535,57 @@ const getRatings = async function (req, res) {
 
 
 
-// Route: GET /containing/:word
-// Description: Returns all games and movies with titles containing a specific word (case-insensitive), 
-// and indicates whether each entry is a game or a movie.
+// Route: GET /containing/:type/:word
+// Description: Returns all games or movies with titles containing a specific word (case-insensitive),
+// and indicates whether each entry is a game or a movie based on the 'type' parameter.
 // Parameters:
+//   - type (required): The type of content to search for, either 'game' or 'movie'.
 //   - word (required): The word to search for in titles.
 // Usage Example:
-//   - Request: http://localhost:8080/containing/war
-//     This will return all games and movies where the title contains the word "war" (e.g., "God of War", "War Horse").
+//   - Request: http://localhost:8080/containing/game/war
+//     This will return all games where the title contains the word "war" (e.g., "God of War").
+//   - Request: http://localhost:8080/containing/movie/war
+//     This will return all movies where the title contains the word "war" (e.g., "War Horse").
 // SQL Logic:
-//   - Matches the `name` column in the `games` table and the `primary_title` column in the `title_basics` table using case-insensitive pattern matching.
-//   - Uses a UNION to combine results from both tables and includes a "type" column to differentiate between games and movies.
+//   - If 'type' is 'game', matches the `name` column in the `games` table using a case-insensitive pattern.
+//   - If 'type' is 'movie', matches the `primary_title` column in the `title_basics` table using a case-insensitive pattern.
+//   - Combines the results based on the 'type' and returns a "type" column to differentiate between games and movies.
 //   - Orders the results by release year in descending order (most recent first).
-const containing = async function (req, res) {
-  const word = req.params.word;
 
-  // Validate input
+const containing = async function (req, res) {
+  const type = req.params.type?.toLowerCase(); // Get 'type' parameter (either 'game' or 'movie')
+  const word = req.params.word; // Get the search word
+
+  // Validate input parameters
   if (!word || word.trim() === '') {
     return res.status(400).json({ error: 'The search word is required and cannot be empty.' });
   }
 
+  if (type !== 'game' && type !== 'movie') {
+    return res.status(400).json({ error: 'The type parameter must be either "game" or "movie".' });
+  }
+
   try {
-    // SQL query to find both games and movies with titles containing the word
-    const query = `
-      (
+    let query;
+    
+    // SQL query to find games or movies with titles containing the word
+    if (type === 'game') {
+      // Search in the games table
+      query = `
         SELECT name AS title, released AS release_year, 'game' AS type
         FROM games
         WHERE LOWER(name) LIKE LOWER($1)
-      )
-      UNION
-      (
+        ORDER BY released DESC;
+      `;
+    } else if (type === 'movie') {
+      // Search in the movies table
+      query = `
         SELECT primary_title AS title, start_year AS release_year, 'movie' AS type
         FROM title_basics
         WHERE LOWER(primary_title) LIKE LOWER($1)
-      )
-      ORDER BY release_year DESC;
-    `;
+        ORDER BY start_year DESC;
+      `;
+    }
 
     // Execute the query with the parameter
     const result = await connection.query(query, [`%${word}%`]);
@@ -573,7 +594,7 @@ const containing = async function (req, res) {
     res.json(result.rows);
   } catch (err) {
     console.error('Error executing containing query:', err);
-    res.status(500).json({ error: 'An error occurred while searching for games and movies.' });
+    res.status(500).json({ error: 'An error occurred while searching for games or movies.' });
   }
 };
 
