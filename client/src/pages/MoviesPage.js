@@ -6,7 +6,7 @@ const config = require('../config.json');
 
 
 //uses /containing and /gamesMoviesByGenre
-export default function AlbumsPage() {
+export default function MoviesPage() {
   const [movieTitle, setMovieTitle] = useState(''); // User's input for the movie title
   const [games, setGames] = useState([]); // List of games related to the movie
 
@@ -89,53 +89,89 @@ export default function AlbumsPage() {
   console.log('Rendered games state:', games);
 
   return (
-    <div>
-      <Typography variant="h2" align="center" gutterBottom>
-        Find Games Based on a Movie
-      </Typography>
+      <div>
+        <h2 style={{textAlign: "center"}}>Movie2Game Engine</h2>
 
-      {/* Input Field for Movie Title */}
-      <Box m={3} textAlign="center">
-        <TextField
-          label="Enter a Movie Title"
-          variant="outlined"
-          value={movieTitle}
-          onChange={(e) => setMovieTitle(e.target.value)}
-          style={{ width: '300px', marginRight: '10px' }}
-        />
-        <Button variant="contained" color="primary" onClick={fetchGamesByMovie}>
-          Search
-        </Button>
-      </Box>
+        {/* Input Field for Movie Title */}
+        <Box m={3} textAlign="center">
+          <TextField
+              label="Enter a Movie Title"
+              variant="standard"
+              value={movieTitle}
+              onChange={(e) => setMovieTitle(e.target.value)}
+              style={{
+                width: '300px',
+                marginRight: '10px',
+              }}
+              InputProps={{
+                style: {
+                  color: 'white', // Text color
+                },
+                classes: {
+                  notchedOutline: {
+                    borderColor: 'white', // Outline color
+                  },
+                },
+              }}
+              InputLabelProps={{
+                style: {
+                  color: 'white', // Label and placeholder color
+                },
+              }}
+          />
+          <Button variant="contained"
+                  onClick={fetchGamesByMovie}
+                  style={{
+                    backgroundColor: "#004d00", // Background color
+                    color: "#ffffff", // Text color
+                    border: "1px solid #39ff14", // Optional border
+                  }}>
+            VOYAGE
+          </Button>
+        </Box>
 
-      {/* Display Games */}
-      <Container style={format}>
-        {games.length > 0 ? (
-          games.map((game, index) => (
-            <Box
-              key={index}
-              p={3}
-              m={2}
-              style={{ background: '#e3f2fd', borderRadius: '16px', border: '1px solid #ddd' }}
-            >
-              <Typography variant="h5">{game.game_title || 'Unknown Game'}</Typography>
-              <Typography variant="body2">Genre: {game.game_genre || 'Unknown Rating'}</Typography>
-              <img
-                src={game.img || '/default-thumbnail.png'}
-                alt={`${game.game_title} Thumbnail`}
-                style={{ width: '150px', height: '150px', marginTop: '10px' }}
-              />
-            </Box>
-          ))
-        ) : (
-          <Typography variant="h6" align="center" style={{ marginTop: '20px' }}>
-            No games to display.
-          </Typography>
-        )}
-      </Container>
-    </div>
+        {/* Display Games */}
+        <Container style={format}>
+          {games.length > 0 ? (
+              games.map((game, index) => (
+                  <Box
+                      key={index}
+                      p={3}
+                      m={2}
+                      style={{
+                        background: '#0a0330',
+                        borderRadius: '16px',
+                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                        ':hover': {
+                          transform: 'scale(1.05)',
+                          boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.7)',
+                        },
+                      }}
+                  >
+                    <Typography
+                        variant="h5">{game.game_title || 'Unknown Game'}</Typography>
+                    <Typography
+                        variant="body2">Genre: {game.game_genre || 'Unknown Rating'}</Typography>
+                    <img
+                        src={game.img || '/default-thumbnail.png'}
+                        alt={`${game.game_title} Thumbnail`}
+                        style={{
+                          width: '150px',
+                          height: '150px',
+                          marginTop: '10px'
+                        }}
+                    />
+                  </Box>
+              ))
+          ) : (
+              <Typography variant="h6" align="center"
+                          style={{marginTop: '20px'}}>
+                No games to display.
+              </Typography>
+          )}
+        </Container>
+      </div>
   );
-
 
 
   /*const [albums, setAlbums] = useState([]);

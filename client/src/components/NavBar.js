@@ -31,7 +31,7 @@ function NavText({ href, text, isMain, color }) {
                         fontFamily: "'Orbitron', 'monospace'",
                         fontWeight: 400,
                         fontSize: '0.5rem',
-                        color: '#ffffff',
+                        color: '#39ff14',
                         textAlign: 'center',
                         marginTop: '1px',
                     }}
