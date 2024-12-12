@@ -10,6 +10,19 @@ export default function AlbumsPage() {
   const [movieTitle, setMovieTitle] = useState(''); // User's input for the movie title
   const [games, setGames] = useState([]); // List of games related to the movie
 
+  // Movie-to-game genre mapping
+  const genreMapping = {
+    Drama: 'Adventure', // Map Drama to Adventure
+    Action: 'Action',
+    Comedy: 'Family',
+    Horror: 'Horror',
+    SciFi: 'Sci-Fi',
+    Fantasy: 'RPG',
+    Romance: 'Narrative',
+    Documentary: 'Simulation',
+    Thriller: 'Survival',
+  };
+
   // Fetch games based on the movie's genre
   const fetchGamesByMovie = async () => {
     try {
@@ -38,12 +51,16 @@ export default function AlbumsPage() {
         });
 
         if (Object.keys(genreCounts).length > 0) {
-          targetGenre = Object.keys(genreCounts).reduce((a, b) =>
+          const detectedMovieGenre = Object.keys(genreCounts).reduce((a, b) =>
             genreCounts[a] > genreCounts[b] ? a : b
           );
+          console.log('Detected Movie Genre:', detectedMovieGenre);
+
+          // Map the detected movie genre to game genres
+          targetGenre = genreMapping[detectedMovieGenre] || 'Action';
         }
 
-        console.log('Detected Target Genre:', targetGenre);
+        console.log('Detected Mapped Genre:', targetGenre);
 
         const gamesResponse = await fetch(
           `http://${config.server_host}:${config.server_port}/games_movies_by_genre/${targetGenre}?limit=10`
@@ -102,7 +119,7 @@ export default function AlbumsPage() {
               style={{ background: '#e3f2fd', borderRadius: '16px', border: '1px solid #ddd' }}
             >
               <Typography variant="h5">{game.game_title || 'Unknown Game'}</Typography>
-              <Typography variant="body2">Rating: {game.game_genre || 'Unknown Rating'}</Typography>
+              <Typography variant="body2">Genre: {game.game_genre || 'Unknown Rating'}</Typography>
               <img
                 src={game.img || '/default-thumbnail.png'}
                 alt={`${game.game_title} Thumbnail`}
