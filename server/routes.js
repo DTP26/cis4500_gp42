@@ -82,6 +82,71 @@ const listTables = async function (req, res) {
   }
 };
 
+// Route: GET /random
+// Description: This route returns a random game or movie based on the provided 'type' parameter.
+// Parameters:
+//   - type (required): The type of content to fetch, either "game" or "movie".
+// Usage Example:
+//   - Request: http://localhost:8080/random?type=game
+//     This will return a random game from the 'games' table.
+//   - Request: http://localhost:8080/random?type=movie
+//     This will return a random movie from the 'title_basics' table.
+//
+// SQL Logic:
+//   - If 'type' is 'game', a random game is selected from the 'games' table.
+//   - If 'type' is 'movie', a random movie is selected from the 'title_basics' and 'title_ratings' tables.
+//   - The results are sorted randomly using 'ORDER BY RANDOM()' and limited to 1 result.
+//   - It returns the title and relevant information (rating for games, average rating for movies).
+
+const randomContent = async function (req, res) {
+  const type = req.query.type?.toLowerCase(); // Get type parameter (game or movie)
+
+  // Validate the type parameter
+  if (type !== 'game' && type !== 'movie') {
+    return res.status(400).json({ error: 'The type parameter must be either "game" or "movie".' });
+  }
+
+  try {
+    let query;
+    let params = [];
+
+    // SQL query to get a random game
+    if (type === 'game') {
+      query = `
+        SELECT name AS title, released AS release_year, rating
+        FROM games
+        ORDER BY RANDOM() 
+        LIMIT 1;
+      `;
+    } 
+    // SQL query to get a random movie
+    else if (type === 'movie') {
+      query = `
+        SELECT primary_title AS title, start_year AS release_year, genres, r.average_rating AS rating
+        FROM title_basics t
+        JOIN title_ratings r ON t.tconst = r.tconst
+        ORDER BY RANDOM()
+        LIMIT 1;
+      `;
+    }
+
+    // Execute the query
+    const result = await connection.query(query, params);
+
+    // Check if any result was returned
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No content found.' });
+    }
+
+    // Return the result
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error executing randomContent query:', err);
+    res.status(500).json({ error: 'An error occurred while retrieving the random content.' });
+  }
+};
+
+
 // Route: GET /important_games_movies/:x/:limit
 // Description: 
 // Returns the top 'limit' number of games and movies with more than 'x' reviews or votes, respectively, 
@@ -513,6 +578,7 @@ const containing = async function (req, res) {
 
 
 
+////////////// Completely Nonsensical
 // Route: GET /age_appropriate_games
 // Description: Fetches all games rated "Everyone" based on their ESRB rating, ordered by rating in descending order.
 // The `esrb_rating` field is assumed to be a JSONB column, so this query extracts the "name" property.
@@ -621,5 +687,6 @@ module.exports = {
   testDatabaseConnections, 
   listTables,
   gamesMoviesByGenre,
-  importantGamesMovies 
+  importantGamesMovies,
+  randomContent
 };
