@@ -245,7 +245,7 @@ const gamesMoviesByGenre = async function (req, res) {
     const query = `
       -- Select games and movies that match the genre, limited by the genre and number of results
       WITH GameGenres AS (
-        SELECT g.id AS game_id, g.name AS game_title, gg.name AS game_genre
+        SELECT g.id AS game_id, g.name AS game_title, gg.name AS game_genre, background_image AS img
         FROM game_genres gg
         JOIN games g ON gg.game_id = g.id
         WHERE LOWER(gg.name) = LOWER($1)  -- Case-insensitive genre filter
@@ -265,7 +265,8 @@ const gamesMoviesByGenre = async function (req, res) {
         t.primary_title,
         r.average_rating AS movie_rating,
         g.game_genre AS shared_genre,
-        'game' AS type
+        'game' AS type,
+        g.img
       FROM GameGenres g
       JOIN MovieGenres m ON g.game_genre = m.movie_genre
       LEFT JOIN title_basics t ON m.movie_id = t.tconst
