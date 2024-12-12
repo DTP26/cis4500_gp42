@@ -316,11 +316,12 @@ const gamesByGenre = async function (req, res) {
   try {
     // SQL query to get all games that belong to a specific genre
     const query = `
-      SELECT g.name AS game_title, g.released AS release_year, g.rating, g.reviews_count
+      SELECT g.name AS game_title, g.released AS release_year, g.rating, g.reviews_count, gg.name AS game_genre, background_image AS img
       FROM games g
       JOIN game_genres gg ON gg.game_id = g.id
       WHERE LOWER(gg.name) = LOWER($1)  -- Search for the genre in a case-insensitive way
-      ORDER BY g.released DESC;  -- Order by release year in descending order
+      ORDER BY g.released DESC  -- Order by release year in descending order
+      LIMIT 10;
     `;
 
     // Execute the query with the parameter
@@ -620,7 +621,7 @@ const containing = async function (req, res) {
     } else if (type === 'movie') {
       // Search in the movies table
       query = `
-        SELECT primary_title AS title, start_year AS release_year, 'movie' AS type
+        SELECT primary_title AS title, start_year AS release_year, 'movie' AS type, unnest(string_to_array(genres, ',')) AS movie_genre
         FROM title_basics
         WHERE LOWER(primary_title) LIKE LOWER($1)
         ORDER BY start_year DESC;
