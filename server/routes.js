@@ -322,17 +322,19 @@ const getRatings = async function (req, res) {
 
 
 
-// Route: GET /game_containing/:word
-// Description: Returns all games with titles containing a specific word (case-insensitive).
+// Route: GET /containing/:word
+// Description: Returns all games and movies with titles containing a specific word (case-insensitive), 
+// and indicates whether each entry is a game or a movie.
 // Parameters:
-//   - word (required): The word to search for in game titles.
+//   - word (required): The word to search for in titles.
 // Usage Example:
-//   - Request: http://localhost:8080/game_containing/war
-//     This will return all games where the title contains the word "war" (e.g., "God of War").
+//   - Request: http://localhost:8080/containing/war
+//     This will return all games and movies where the title contains the word "war" (e.g., "God of War", "War Horse").
 // SQL Logic:
-//   - Matches the `name` column in the `games` table using a case-insensitive pattern.
-//   - Orders the results by the `release` column in descending order (most recent first).
-const gameContaining = async function (req, res) {
+//   - Matches the `name` column in the `games` table and the `primary_title` column in the `title_basics` table using case-insensitive pattern matching.
+//   - Uses a UNION to combine results from both tables and includes a "type" column to differentiate between games and movies.
+//   - Orders the results by release year in descending order (most recent first).
+const containing = async function (req, res) {
   const word = req.params.word;
 
   // Validate input
@@ -341,12 +343,20 @@ const gameContaining = async function (req, res) {
   }
 
   try {
-    // SQL query to find games with titles containing the word
+    // SQL query to find both games and movies with titles containing the word
     const query = `
-      SELECT name, released AS release_year
-      FROM games
-      WHERE LOWER(name) LIKE LOWER($1)
-      ORDER BY released DESC;
+      (
+        SELECT name AS title, released AS release_year, 'game' AS type
+        FROM games
+        WHERE LOWER(name) LIKE LOWER($1)
+      )
+      UNION
+      (
+        SELECT primary_title AS title, start_year AS release_year, 'movie' AS type
+        FROM title_basics
+        WHERE LOWER(primary_title) LIKE LOWER($1)
+      )
+      ORDER BY release_year DESC;
     `;
 
     // Execute the query with the parameter
@@ -355,10 +365,11 @@ const gameContaining = async function (req, res) {
     // Return the results
     res.json(result.rows);
   } catch (err) {
-    console.error('Error executing gameContaining query:', err);
-    res.status(500).json({ error: 'An error occurred while searching for games.' });
+    console.error('Error executing containing query:', err);
+    res.status(500).json({ error: 'An error occurred while searching for games and movies.' });
   }
 };
+
 
 
 // Route: GET /age_appropriate_games
@@ -463,7 +474,7 @@ module.exports = {
   movieNumRatings, 
   highestAvgRating, 
   getRatings, 
-  gameContaining,  
+  containing,  
   topMoviesByVotes, 
   topGameGenres, 
   testDatabaseConnections, 
