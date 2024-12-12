@@ -15,17 +15,38 @@ export default function AlbumsPage() {
     try {
       console.log(`Searching for movies containing: ${movieTitle}`);
       const genreResponse = await fetch(
-        `http://${config.server_host}:${config.server_port}/containing/${movieTitle}`
+        `http://${config.server_host}:${config.server_port}/containing/movie/${movieTitle}`
       );
       const movies = await genreResponse.json();
       console.log('Movies Response:', movies);
 
+      let targetGenre = 'Action'; // Default to Action
+
       if (movies.length > 0) {
-        const genre = movies[0].genre || 'Action'; // Default to 'Action' if genre is missing
-        console.log('Detected Genre:', genre);
+        
+        
+        /*const genre = movies[0].genre || 'Action'; // Default to 'Action' if genre is missing
+        console.log('Detected Genre:', genre);*/
+
+        // Find the most common genre among the matched movies
+        const genreCounts = {};
+        movies.forEach((movie) => {
+          const genre = movie.movie_genre || '';
+          if (genre.trim()) {
+            genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+          }
+        });
+
+        if (Object.keys(genreCounts).length > 0) {
+          targetGenre = Object.keys(genreCounts).reduce((a, b) =>
+            genreCounts[a] > genreCounts[b] ? a : b
+          );
+        }
+
+        console.log('Detected Target Genre:', targetGenre);
 
         const gamesResponse = await fetch(
-          `http://${config.server_host}:${config.server_port}/games_movies_by_genre/${genre}?limit=10`
+          `http://${config.server_host}:${config.server_port}/games_movies_by_genre/${targetGenre}?limit=10`
         );
         const gamesJson = await gamesResponse.json();
         console.log('Fetched Games:', gamesJson);
