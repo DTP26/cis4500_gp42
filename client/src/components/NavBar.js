@@ -60,9 +60,9 @@ export default function NavBar() {
                         justifyContent: 'space-around',
                     }}
                 >
-                    <NavText href="/albums" text="MOVIES" color="#39ff14" />
+                    <NavText href="/movies" text="MOVIES" color="#39ff14" />
                     <NavText href="/" text="HI SCORE!" isMain color="#ffffff"/>
-                    <NavText href="/songs" text="GAMES" color="#004d00" />
+                    <NavText href="/games" text="GAMES" color="#004d00" />
                 </Toolbar>
             </Container>
         </AppBar>
