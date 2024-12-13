@@ -79,6 +79,30 @@ export default function HomePage() {
 
     return (
         <Container>
+            <Box
+                component="img"
+                src="/controller.png"
+                alt="Bouncing and Spinning Controller"
+                sx={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    width: "150px",
+                    height: "150px",
+                    zIndex: 9999,
+                    animation: "bounce-spin 6s infinite linear",
+                    "@keyframes bounce-spin": {
+                        "0%": { transform: "translate(0, 0) rotate(0deg)" },
+                        "25%": { transform: "translate(calc(100vw - 150px)," +
+                                " 0) rotate(90deg)" },
+                        "50%": { transform: "translate(calc(100vw - 150px)," +
+                                " calc(100vh - 150px)) rotate(180deg)" },
+                        "75%": { transform: "translate(0, calc(100vh -" +
+                                " 150px)) rotate(270deg)" },
+                        "100%": { transform: "translate(0, 0) rotate(360deg)" },
+                    },
+                }}
+            />
             <h2 style={{ textAlign: "center" }}>Featured:</h2>
             <div
                 style={{
