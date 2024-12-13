@@ -14,6 +14,57 @@ import { formatReleaseDate } from "../helpers/formatter";
 import LazyTable from "../components/LazyTable";
 const config = require("../config.json");
 
+const BouncingController = () => {
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [direction, setDirection] = useState({ x: 1, y: 1 });
+    const [rotation, setRotation] = useState(0); // Track the rotation angle
+    const controllerSize = 150;
+
+    useEffect(() => {
+        const moveController = () => {
+            setPosition((prev) => {
+                const newX = prev.x + direction.x * 5;
+                const newY = prev.y + direction.y * 5;
+
+                let newDirection = { ...direction };
+
+                if (newX + controllerSize > window.innerWidth || newX < 0) {
+                    newDirection.x = -direction.x;
+                }
+                if (newY + controllerSize > window.innerHeight || newY < 0) {
+                    newDirection.y = -direction.y;
+                }
+
+                setDirection(newDirection);
+
+                // Increment rotation counterclockwise
+                setRotation((prevRotation) => (prevRotation - 1) % 360);
+
+                return { x: newX, y: newY };
+            });
+        };
+
+        const interval = setInterval(moveController, 16);
+        return () => clearInterval(interval);
+    }, [direction]);
+
+    return (
+        <Box
+            component={"img"}
+            src={"/controller.png"}
+            alt={"Bouncing Controller"}
+            sx={{
+                position: "fixed",
+                width: `${controllerSize}px`,
+                height: `${controllerSize}px`,
+                zIndex: 9999,
+                transform: `translate(${position.x}px, ${position.y}px) rotate(${rotation}deg)`,
+                transformOrigin: "center",
+            }}
+        />
+    );
+};
+
 export default function HomePage() {
     const [gameOfTheDay, setGameOfTheDay] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -79,30 +130,7 @@ export default function HomePage() {
 
     return (
         <Container>
-            <Box
-                component="img"
-                src="/controller.png"
-                alt="Bouncing and Spinning Controller"
-                sx={{
-                    position: "fixed",
-                    top: 0,
-                    left: 0,
-                    width: "150px",
-                    height: "150px",
-                    zIndex: 9999,
-                    animation: "bounce-spin 6s infinite linear",
-                    "@keyframes bounce-spin": {
-                        "0%": { transform: "translate(0, 0) rotate(0deg)" },
-                        "25%": { transform: "translate(calc(100vw - 150px)," +
-                                " 0) rotate(90deg)" },
-                        "50%": { transform: "translate(calc(100vw - 150px)," +
-                                " calc(100vh - 150px)) rotate(180deg)" },
-                        "75%": { transform: "translate(0, calc(100vh -" +
-                                " 150px)) rotate(270deg)" },
-                        "100%": { transform: "translate(0, 0) rotate(360deg)" },
-                    },
-                }}
-            />
+            <BouncingController />
             <h2 style={{ textAlign: "center" }}>Featured:</h2>
             <div
                 style={{
