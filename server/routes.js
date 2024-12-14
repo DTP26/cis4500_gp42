@@ -352,18 +352,18 @@ const gamesByGenre = async function (req, res) {
 //     http://localhost:8080/highest_avg_rating?year=2020&&limit=5
 
 const highestAvgRating = async function (req, res) {
-  const year = req.query.year ? parseInt(req.query.start_year, 10) : null;
+  const year = req.query.year ? parseInt(req.query.year, 10) : null;
   const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
 
   // Validate the required parameters
-  if (!startYear) {
+  if (!year) {
     return res.status(400).json({
       error: 'Invalid or missing parameters. Ensure "year" is a valid integer.',
     });
   }
 
   // Validate the limit parameter
-  if (limit !== null && (!Number.isInteger(limit) || limit <= 0)) {
+  if (limit != null && (!Number.isInteger(limit) || limit <= 0)) {
     return res.status(400).json({ error: 'Invalid limit parameter. Must be a positive integer.' });
   }
 
@@ -374,28 +374,33 @@ const highestAvgRating = async function (req, res) {
         FROM title_basics b
         JOIN title_ratings r ON b.tconst = r.tconst
         WHERE b.start_year = $1
-        GROUP BY b.start_year, b.primary_title
+        ORDER BY movie_rating DESC
+        LIMIT ${limit ? '$2' : '1'}
       ), 
       GOODGAMES AS (
-        SELECT g.released AS release_year, g.name AS game, MAX(g.rating) AS game_rating
+        SELECT DISTINCT SUBSTRING(g.released, 1, 4) AS release_year_game, g.name AS game, g.rating AS game_rating
         FROM games g
-        WHERE g.released >= $1 AND g.released < $2
-        GROUP BY g.released, g.name
+        WHERE g.name IS NOT NULL
+        ORDER BY game_rating DESC
+        LIMIT ${limit ? '$2' : '1'}
       )
-      SELECT gm.release_year, gm.movie, gm.movie_rating, gg.game, gg.game_rating
+      SELECT gm.release_year, gm.movie, gm.movie_rating, gg.game, gg.release_year_game, gg.game, gg.game_rating
       FROM GOODMOVIES gm
-      JOIN GOODGAMES gg ON gm.release_year = gg.release_year
-      ORDER BY gm.release_year
-      ${limit ? 'LIMIT $3' : ''};
+      LEFT OUTER JOIN GOODGAMES gg ON gm.release_year = gg.release_year_game
+
+      
     `;
 
-    const params = limit ? [startYear, endYear, limit] : [startYear, endYear];
-
+    const params = limit ? [year, limit] : [year];
+    console.log(year);
+    console.log(limit);
     // Execute the query
     const result = await connection.query(query, params);
     res.json(result.rows); // Return the results as JSON
   } catch (err) {
     console.error('Error executing highestAvgRating query:', err);
+    console.log(year);
+    console.log(limit);
     res.status(500).json({ error: 'An error occurred while fetching the highest average ratings by year.' });
   }
 };
