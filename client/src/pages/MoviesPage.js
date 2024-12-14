@@ -61,7 +61,25 @@ export default function MoviesPage() {
         console.log('Fetched Games:', gamesJson);
 
         if (gamesJson.length > 0) {
-          setGames(gamesJson);
+          const genreResponseGames = await fetch(
+            `http://${config.server_host}:${config.server_port}/containing/game/${movieTitle}`
+          );
+          const gamesTitlesJson = await genreResponseGames.json();
+          console.log('Fetched Games Titles:', gamesTitlesJson);
+          if (gamesTitlesJson.length > 0) {
+
+            const overlap = gamesTitlesJson.filter(game => game.game_genre === targetGenre);
+            console.log('Overlapping Games:', overlap);
+            if (overlap.length > 0) {
+            setGames(overlap);
+            }
+            else {
+              setGames(gamesTitlesJson)
+            }
+          } else {
+            setGames(gamesJson)
+
+            }
         } else {
           setGames([]);
           alert('No games found for the detected genre.');

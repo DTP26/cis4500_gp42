@@ -205,7 +205,7 @@ const importantGamesMovies = async function (req, res) {
         'movie' AS type  -- Indicate the type is a movie
       FROM ImportantMovies im)
 
-      ORDER BY title DESC  -- Sort by reviews/votes count in descending order
+      ORDER BY game_rating DESC  -- Sort by reviews/votes count in descending order
       LIMIT $2;  -- Limit the total number of results (games + movies)
     `;
 
@@ -594,7 +594,12 @@ const getRatings = async function (req, res) {
 
 const containing = async function (req, res) {
   const type = req.params.type?.toLowerCase(); // Get 'type' parameter (either 'game' or 'movie')
-  const word = req.params.word; // Get the search word
+  let word = req.params.word; // Get the search word
+
+  // List of common stop words to ignore
+  const stopWords = new Set([
+    'a', 'an', 'the', 'and', 'but', 'or', 'nor', 'for', 'so', 'to', 'in', 'on', 'at', 'by', 'with', 'as', 'from', 'about', 'of'
+  ]);
 
   // Validate input parameters
   if (!word || word.trim() === '') {
@@ -605,38 +610,63 @@ const containing = async function (req, res) {
     return res.status(400).json({ error: 'The type parameter must be either "game" or "movie".' });
   }
 
+  // Split the input into words and filter out stop words
+  const words = word
+    .split(/\s+/) // Split by spaces (handles multiple spaces or hyphenated words)
+    .filter((w) => !stopWords.has(w.toLowerCase())) // Remove stop words
+    .map((w) => w.toLowerCase()); // Normalize to lowercase
+
+  if (words.length === 0) {
+    return res.status(400).json({ error: 'No valid search words after removing stop words.' });
+  }
+
   try {
     let query;
-    
-    // SQL query to find games or movies with titles containing the word
+    let queryParams = [];
+
+    // Dynamically construct the WHERE clause based on the number of words
+    let whereClause;
     if (type === 'game') {
-      // Search in the games table
+      // For games, construct the query
+      whereClause = words.map((word, idx) => {
+        queryParams.push(`%${word}%`);
+        return `LOWER(games.name) LIKE $${idx + 1}`;
+      }).join(' OR ');
+
       query = `
-        SELECT name AS title, released AS release_year, 'game' AS type
+        SELECT game_genres.name as game_genre, games.name AS game_title, games.background_image AS img, released AS release_year, 'game' AS type
         FROM games
-        WHERE LOWER(name) LIKE LOWER($1)
-        ORDER BY released DESC;
+        JOIN game_genres ON games.id = game_genres.id
+        WHERE ${whereClause}
+        ORDER BY games.ratings_count DESC;
       `;
     } else if (type === 'movie') {
-      // Search in the movies table
+      // For movies, construct the query
+      whereClause = words.map((word, idx) => {
+        queryParams.push(`%${word}%`);
+        return `LOWER(primary_title) LIKE $${idx + 1}`;
+      }).join(' AND ');
+
       query = `
         SELECT primary_title AS title, start_year AS release_year, 'movie' AS type, unnest(string_to_array(genres, ',')) AS movie_genre
         FROM title_basics
-        WHERE LOWER(primary_title) LIKE LOWER($1)
+        WHERE ${whereClause}
         ORDER BY start_year DESC;
       `;
     }
 
-    // Execute the query with the parameter
-    const result = await connection.query(query, [`%${word}%`]);
-
-    // Return the results
+    // Execute the query with the parameterized values
+    const result = await connection.query(query, queryParams);
+    
+    // Send the result as a JSON response
     res.json(result.rows);
   } catch (err) {
-    console.error('Error executing containing query:', err);
-    res.status(500).json({ error: 'An error occurred while searching for games or movies.' });
+    console.error('Error executing query', err);
+    res.status(500).json({ error: 'An error occurred while searching.' });
   }
 };
+
+
 
 
 
