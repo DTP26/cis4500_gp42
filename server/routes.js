@@ -533,7 +533,7 @@ const getRatings = async function (req, res) {
         query = `
           SELECT name, rating
           FROM games
-          WHERE rating BETWEEN $1 AND $2
+          WHERE rating BETWEEN $1 AND $2 AND name IS NOT NULL
           ORDER BY name
           ${limit ? 'LIMIT $3' : ''};
         `;
@@ -543,7 +543,7 @@ const getRatings = async function (req, res) {
         query = `
           SELECT name, rating
           FROM games
-          WHERE rating < $1
+          WHERE rating < $1 AND name IS NOT NULL
           ORDER BY name
           ${limit ? 'LIMIT $2' : ''};
         `;
@@ -553,7 +553,7 @@ const getRatings = async function (req, res) {
         query = `
           SELECT name, rating
           FROM games
-          WHERE rating > $1
+          WHERE rating > $1 AND name IS NOT NULL
           ORDER BY name
           ${limit ? 'LIMIT $2' : ''};
         `;
