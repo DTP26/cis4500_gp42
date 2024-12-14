@@ -121,6 +121,10 @@ export default function MoviesPage() {
                             borderBottom: '2px solid #39ff14',
                         },
                     },
+                    style: {
+                      color: 'white', // Label color
+                      fontFamily: "'Orbitron', sans-serif",
+                    },
                 }}
                 InputLabelProps={{
                     style: {
