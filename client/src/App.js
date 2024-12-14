@@ -6,7 +6,6 @@ import { createTheme } from "@mui/material/styles";
 import NavBar from './components/NavBar';
 import HomePage from './pages/HomePage';
 import MoviesPage from './pages/MoviesPage';
-import GameTimeMachinePage from './pages/GameTimeMachinePage'
 import GenresPage from './pages/GenresPage'
 import GamesPage from "./pages/GamesPage";
 import ExplorePage from "./pages/ExplorePage";

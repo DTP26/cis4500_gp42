@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Container, Button } from "@mui/material";
-import Carousel from "react-multi-carousel";
-import "react-multi-carousel/lib/styles.css";
+import { Typography, Container, Button } from "@mui/material";
 
 const config = require("../config.json");
 
@@ -10,7 +8,10 @@ export default function ExplorePage() {
     const [year, setYear] = useState('');
     const [limit, setLimit] = useState(1);
     const [results, setResults] = useState([]);
+    const [guiltyResults, setGuiltyResults] = useState([]);
     const [error, setError] = useState('');
+    const [lowerRating, setLowerRating] = useState('');
+    const [upperRating, setUpperRating] = useState('');
 
     useEffect(() => {
         const fetchTrendingMedia = async () => {
@@ -47,18 +48,39 @@ export default function ExplorePage() {
                 `http://${config.server_host}:${config.server_port}/highest_avg_rating?year=${year}&limit=${limit}`
             );
             const data = await response.json();
+            console.log("Time machine results:", data); // Debugging log
             setResults(data || []);
         } catch (err) {
-            console.error("Error fetching data:", err);
+            console.error("Error fetching time machine data:", err);
             setError('Failed to fetch data. Please try again later.');
         }
     };
 
-    const responsive = {
-        superLargeDesktop: { breakpoint: { max: 4000, min: 1024 }, items: 5 },
-        desktop: { breakpoint: { max: 1024, min: 768 }, items: 3 },
-        tablet: { breakpoint: { max: 768, min: 464 }, items: 2 },
-        mobile: { breakpoint: { max: 464, min: 0 }, items: 1 },
+    const handleGuiltySubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setGuiltyResults([]);
+
+        if (!lowerRating || isNaN(lowerRating) || lowerRating < 0) {
+            setError('Please enter a valid lower rating (e.g., 0.5).');
+            return;
+        }
+        if (!upperRating || isNaN(upperRating) || upperRating > 10) {
+            setError('Please enter a valid upper rating (e.g., 5.0).');
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `http://${config.server_host}:${config.server_port}/ratings?type=movies&lower=${lowerRating}&upper=${upperRating}&limit=10`
+            );
+            const data = await response.json();
+            console.log("Guilty pleasure results:", data); // Debugging log
+            setGuiltyResults(data || []);
+        } catch (err) {
+            console.error("Error fetching guilty pleasure data:", err);
+            setError('Failed to fetch data. Please try again later.');
+        }
     };
 
     return (
@@ -70,12 +92,16 @@ export default function ExplorePage() {
                 Explore Media
             </Typography>
 
+            {/* Game/Movie Time Machine */}
             <div style={{ padding: "20px", fontFamily: "'Orbitron', sans-serif", color: "#e0e0e0" }}>
                 <Typography
                     variant="h2"
                     style={{ fontFamily: "'Orbitron', sans-serif", marginBottom: "20px" }}
                 >
                     Games & Movies Time Machine
+                </Typography>
+                <Typography style={{ marginBottom: "20px", fontStyle: "italic" }}>
+                    Go back in time to find the top movies/games of your favorite year.
                 </Typography>
                 <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
                     <div style={{ marginBottom: "10px" }}>
@@ -124,113 +150,111 @@ export default function ExplorePage() {
                     </Button>
                 </form>
 
-                {error && <Typography style={{ color: "red", fontFamily: "'Orbitron', sans-serif" }}>{error}</Typography>}
-
-                <div>
-                    {Array.isArray(results) && results.length > 0 ? (
-                        <div>
-                            <Typography
-                                variant="h3"
-                                style={{ fontFamily: "'Orbitron', sans-serif", marginBottom: "20px" }}
-                            >
-                                Top Results for {year}
-                            </Typography>
-                            <div style={{ textAlign: "left", marginLeft: "20px" }}>
-                                {results.map((item, index) => (
-                                    <div key={index} style={{ marginBottom: "10px" }}>
-                                        <strong>Title:</strong> {item.title} <br />
-                                        <strong>Type:</strong> {item.type === "game" ? "Game" : "Movie"} <br />
-                                        <strong>Rating:</strong> {item.rating} {item.type === "game" ? "/5" : "/10"} <br />
-                                        <strong>Release Year:</strong> {item.release_year}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ) : (
-                        <Typography>No results found. Try a different year or limit.</Typography>
-                    )}
-                </div>
+                {Array.isArray(results) && results.length > 0 ? (
+                    <div>
+                        <Typography
+                            variant="h3"
+                            style={{
+                                fontFamily: "'Orbitron', sans-serif",
+                                marginBottom: "20px",
+                                color: "#ffffff",
+                            }}
+                        >
+                            Top Results for {year}
+                        </Typography>
+                        <ul style={{ listStyle: "none", padding: "0", textAlign: "left", color: "#ffffff" }}>
+                            {results.map((item, index) => (
+                                <li key={index} style={{ marginBottom: "10px", fontSize: "1.2rem" }}>
+                                    <strong>{item.title}</strong> - {item.type.toUpperCase()}, Rating: {item.rating}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ) : (
+                    <Typography>No results found. Try a different year or limit.</Typography>
+                )}
             </div>
 
+            {/* Guilty Pleasure Search Engine */}
             <div style={{ marginTop: "40px" }}>
                 <Typography
                     variant="h2"
                     style={{ fontFamily: "'Orbitron', sans-serif", marginBottom: "20px", color: "#ffffff" }}
                 >
-                    Media Explorer: Trending Games & Movies
+                    Guilty Pleasure Search Engine
                 </Typography>
+                <Typography style={{ marginBottom: "20px", fontStyle: "italic" }}>
+                    We all have our guilty pleasure! Go ahead, search for that movie rated 0.5/10!
+                </Typography>
+                <form onSubmit={handleGuiltySubmit} style={{ marginBottom: "20px" }}>
+                    <div style={{ marginBottom: "10px"  }}>
+                        <label htmlFor="lowerRating" style={{ marginRight: "10px" }}>Lower Rating:</label>
+                        <input
+                            type="number"
+                            id="lowerRating"
+                            value={lowerRating}
+                            onChange={(e) => setLowerRating(e.target.value)}
+                            placeholder="e.g., 0.5"
+                            style={{
+                                padding: "5px",
+                                width: "200px",
+                                fontFamily: "'Orbitron', sans-serif",
+                                fontSize: "1rem",
+                            }}
+                        />
+                    </div>
+                    <div style={{ marginBottom: "10px" }}>
+                        <label htmlFor="upperRating" style={{ marginRight: "10px" }}>Upper Rating:</label>
+                        <input
+                            type="number"
+                            id="upperRating"
+                            value={upperRating}
+                            onChange={(e) => setUpperRating(e.target.value)}
+                            placeholder="e.g., 5.0"
+                            style={{
+                                padding: "5px",
+                                width: "200px",
+                                fontFamily: "'Orbitron', sans-serif",
+                                fontSize: "1rem",
+                            }}
+                        />
+                    </div>
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        style={{
+                            backgroundColor: "#FF4500",
+                            color: "#fff",
+                            fontFamily: "'Orbitron', sans-serif",
+                            fontSize: "1rem",
+                        }}
+                    >
+                        Search Guilty Pleasures
+                    </Button>
+                </form>
 
-                {trendingMedia.length > 0 ? (
-                    <Carousel responsive={responsive} infinite autoPlay autoPlaySpeed={3000}>
-                        {trendingMedia.map((item, index) => (
-                            <Box
-                                key={index}
-                                sx={{
-                                    background: `linear-gradient(145deg, ${
-                                        item.type === "game" ? "#1e3a8a" : "#3a1e8a"
-                                    }, #000000)`,
-                                    color: "white",
-                                    padding: "20px",
-                                    borderRadius: "20px",
-                                    textAlign: "center",
-                                    boxShadow: "0px 8px 16px rgba(0, 0, 0, 0.7)",
-                                    margin: "10px",
-                                    height: "300px",
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    justifyContent: "space-between",
-                                    transition: "transform 0.3s ease",
-                                    "&:hover": {
-                                        transform: "scale(1.05)",
-                                        boxShadow: "0px 12px 24px rgba(0, 0, 0, 0.9)",
-                                    },
-                                }}
-                            >
-                                <Typography
-                                    variant="h6"
-                                    style={{
-                                        fontFamily: "'Orbitron', sans-serif",
-                                        marginBottom: "10px",
-                                        fontWeight: "bold",
-                                        fontSize: "18px",
-                                    }}
-                                >
-                                    {item.title || "Unknown Title"}
-                                </Typography>
-                                <Typography
-                                    variant="body2"
-                                    style={{
-                                        fontFamily: "'Orbitron', sans-serif",
-                                        marginBottom: "5px",
-                                    }}
-                                >
-                                    Type: {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-                                </Typography>
-                                <Typography
-                                    variant="body2"
-                                    style={{
-                                        fontFamily: "'Orbitron', sans-serif",
-                                        marginBottom: "5px",
-                                        fontSize: "14px",
-                                    }}
-                                >
-                                    Rating: {item.game_rating || "N/A"}
-                                </Typography>
-                                <Typography
-                                    variant="body2"
-                                    style={{
-                                        fontFamily: "'Orbitron', sans-serif",
-                                        marginBottom: "5px",
-                                        fontSize: "14px",
-                                    }}
-                                >
-                                    Reviews: {item.reviews_count || "N/A"}
-                                </Typography>
-                            </Box>
-                        ))}
-                    </Carousel>
+                {Array.isArray(guiltyResults) && guiltyResults.length > 0 ? (
+                    <div>
+                        <Typography
+                            variant="h3"
+                            style={{
+                                fontFamily: "'Orbitron', sans-serif",
+                                marginBottom: "20px",
+                                color: "#ffffff",
+                            }}
+                        >
+                            Guilty Pleasure Results
+                        </Typography>
+                        <ul style={{ listStyle: "none", padding: "0", textAlign: "left", color: "#ffffff" }}>
+                            {guiltyResults.map((item, index) => (
+                                <li key={index} style={{ marginBottom: "10px", fontSize: "1.2rem" }}>
+                                    <strong>{item.name}</strong> - Rating: {item.rating}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
                 ) : (
-                    <Typography>No trending media to display.</Typography>
+                    <Typography>No results found. Try adjusting your rating range.</Typography>
                 )}
             </div>
         </Container>
