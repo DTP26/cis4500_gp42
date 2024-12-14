@@ -753,8 +753,8 @@ const topGameGenres = async function (req, res) {
     const query = `
       SELECT name, SUM(games_count) AS numberOfGames
       FROM game_genres
-      ORDER BY numberOfGames DESC
       GROUP BY name
+      ORDER BY numberOfGames DESC
       LIMIT $1;
     `;
 
