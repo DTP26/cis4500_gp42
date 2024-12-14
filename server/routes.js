@@ -370,10 +370,10 @@ const highestAvgRating = async function (req, res) {
   try {
     const query = `
       WITH GOODMOVIES AS (
-        SELECT b.start_year AS release_year, b.primary_title AS movie, MAX(r.average_rating) AS movie_rating
+        SELECT b.start_year AS release_year, b.primary_title AS movie, r.average_rating AS movie_rating
         FROM title_basics b
         JOIN title_ratings r ON b.tconst = r.tconst
-        WHERE b.start_year >= $1 AND b.start_year < $2
+        WHERE b.start_year = $1
         GROUP BY b.start_year, b.primary_title
       ), 
       GOODGAMES AS (
@@ -751,9 +751,10 @@ const topGameGenres = async function (req, res) {
 
   try {
     const query = `
-      SELECT DISTINCT name, games_count
+      SELECT name, SUM(games_count) AS numberOfGames
       FROM game_genres
-      ORDER BY games_count DESC
+      ORDER BY numberOfGames DESC
+      GROUP BY name
       LIMIT $1;
     `;
 
