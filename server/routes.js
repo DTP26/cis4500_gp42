@@ -353,7 +353,7 @@ const gamesByGenre = async function (req, res) {
 //     http://localhost:8080/highest_avg_rating?year=2020&&limit=5
 
 const highestAvgRating = async function (req, res) {
-  const year = req.query.year ? parseInt(req.query.year, 10) : null;
+  const year = req.query.year ? req.query.year : null;
   const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
 
   // Validate the required parameters
@@ -371,37 +371,34 @@ const highestAvgRating = async function (req, res) {
   try {
     const query = `
       WITH GOODMOVIES AS (
-        SELECT b.start_year AS release_year, b.primary_title AS movie, r.average_rating AS movie_rating
+        SELECT b.start_year AS release_year, b.primary_title AS title, r.average_rating AS rating, 'movie' AS type
         FROM title_basics b
         JOIN title_ratings r ON b.tconst = r.tconst
-        WHERE b.start_year = $1
-        ORDER BY movie_rating DESC
-        LIMIT ${limit ? '$2' : '1'}
+        WHERE b.start_year = $2
+        ORDER BY r.average_rating DESC
+        LIMIT ${limit ? '$3' : '1'}
       ), 
       GOODGAMES AS (
-        SELECT DISTINCT SUBSTRING(g.released, 1, 4) AS release_year_game, g.name AS game, g.rating AS game_rating
+        SELECT SUBSTRING(g.released, 1, 4) AS release_year, g.name AS title, g.rating AS rating, 'game' AS type
         FROM games g
-        WHERE g.name IS NOT NULL
-        ORDER BY game_rating DESC
-        LIMIT ${limit ? '$2' : '1'}
+        WHERE g.name IS NOT NULL AND SUBSTRING(g.released, 1, 4) = $1
+        ORDER BY g.rating DESC
+        LIMIT ${limit ? '$3' : '1'}
       )
-      SELECT gm.release_year, gm.movie, gm.movie_rating, gg.game, gg.release_year_game, gg.game, gg.game_rating
-      FROM GOODMOVIES gm
-      LEFT OUTER JOIN GOODGAMES gg ON gm.release_year = gg.release_year_game
+      SELECT * FROM GOODMOVIES
+      UNION 
+      SELECT * FROM GOODGAMES 
+      ORDER BY type, rating DESC
 
       
     `;
 
-    const params = limit ? [year, limit] : [year];
-    console.log(year);
-    console.log(limit);
+    const params = limit ? [year, parseInt(req.query.year, 10), limit] : [year, parseInt(req.query.year, 10)];
     // Execute the query
     const result = await connection.query(query, params);
     res.json(result.rows); // Return the results as JSON
   } catch (err) {
     console.error('Error executing highestAvgRating query:', err);
-    console.log(year);
-    console.log(limit);
     res.status(500).json({ error: 'An error occurred while fetching the highest average ratings by year.' });
   }
 };
@@ -537,7 +534,7 @@ const getRatings = async function (req, res) {
         query = `
           SELECT name, rating
           FROM games
-          WHERE rating BETWEEN $1 AND $2
+          WHERE rating BETWEEN $1 AND $2 AND name IS NOT NULL
           ORDER BY name
           ${limit ? 'LIMIT $3' : ''};
         `;
@@ -547,7 +544,7 @@ const getRatings = async function (req, res) {
         query = `
           SELECT name, rating
           FROM games
-          WHERE rating < $1
+          WHERE rating < $1 AND name IS NOT NULL
           ORDER BY name
           ${limit ? 'LIMIT $2' : ''};
         `;
@@ -557,7 +554,7 @@ const getRatings = async function (req, res) {
         query = `
           SELECT name, rating
           FROM games
-          WHERE rating > $1
+          WHERE rating > $1 AND name IS NOT NULL
           ORDER BY name
           ${limit ? 'LIMIT $2' : ''};
         `;
