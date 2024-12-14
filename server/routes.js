@@ -340,27 +340,25 @@ const gamesByGenre = async function (req, res) {
 
 // NONSENSE
 // Route: GET /highest_avg_rating
-// Description: Finds the highest average rating received by a movie and the highest average rating received by a game 
-//              for each year within a specified range. Results are grouped by release year, movie title, and game title.
+// Description: Finds the highest rated movie(s) and game(s) for the inputted year. 
+//              Results are grouped by release year, movie title, and game title.
 // Parameters:
-//   - start_year (required): The starting year for the range (inclusive).
-//   - end_year (required): The ending year for the range (exclusive).
-//   - limit (optional): The maximum number of years to return. Defaults to returning all results if not specified.
+//   - year (required): The year to search games and movies from (inclusive).
+//   - limit (optional): The amount of movies/games to return. Defaults to 1 if empty
 // Example Input:
-//   - Fetch all years with the highest-rated movie and game for each between 2010 and 2020:
-//     http://localhost:8080/highest_avg_rating?start_year=2010&end_year=2020
-//   - Fetch the top 5 years with the highest-rated movie and game for each between 2015 and 2020:
-//     http://localhost:8080/highest_avg_rating?start_year=2015&end_year=2020&limit=5
+//   - Fetch the highest-rated movie and game from 2003:
+//     http://localhost:8080/highest_avg_rating?year=2003
+//   - Fetch the top 5 rated movies and games from 2020:
+//     http://localhost:8080/highest_avg_rating?year=2020&&limit=5
 
 const highestAvgRating = async function (req, res) {
-  const startYear = req.query.start_year ? parseInt(req.query.start_year, 10) : null;
-  const endYear = req.query.end_year ? parseInt(req.query.end_year, 10) : null;
+  const year = req.query.year ? parseInt(req.query.start_year, 10) : null;
   const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
 
   // Validate the required parameters
-  if (!startYear || !endYear || startYear >= endYear) {
+  if (!startYear) {
     return res.status(400).json({
-      error: 'Invalid or missing parameters. Ensure "start_year" and "end_year" are valid integers and start_year < end_year.',
+      error: 'Invalid or missing parameters. Ensure "year" is a valid integer.',
     });
   }
 
@@ -753,7 +751,7 @@ const topGameGenres = async function (req, res) {
 
   try {
     const query = `
-      SELECT name, games_count
+      SELECT DISTINCT name, games_count
       FROM game_genres
       ORDER BY games_count DESC
       LIMIT $1;
