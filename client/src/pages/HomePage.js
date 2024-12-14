@@ -7,17 +7,17 @@ import {
     Divider,
     Typography,
     Box,
+    Button,
 } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import { formatReleaseDate } from "../helpers/formatter";
-
 import LazyTable from "../components/LazyTable";
 const config = require("../config.json");
 
 const BouncingController = () => {
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [direction, setDirection] = useState({ x: 1, y: 1 });
-    const [rotation, setRotation] = useState(0); // Track the rotation angle
+    const [rotation, setRotation] = useState(0);
     const controllerSize = 150;
 
     useEffect(() => {
@@ -37,7 +37,6 @@ const BouncingController = () => {
 
                 setDirection(newDirection);
 
-                // Increment rotation counterclockwise
                 setRotation((prevRotation) => (prevRotation - 1) % 360);
 
                 return { x: newX, y: newY };
@@ -91,11 +90,15 @@ export default function HomePage() {
             field: "genre",
             headerName: "Genre",
             renderCell: (row) => (
-                <NavLink to={`/games_by_genre/${row.name}`}
-                         style={{
-                    color: '#39ff14', // Neon green for unvisited linkse
-                }}>{"🎮  " + row.name}</NavLink>
-            )
+                <NavLink
+                    to={`/games_by_genre/${row.name}`}
+                    style={{
+                        color: "#39ff14",
+                    }}
+                >
+                    {"🎮  " + row.name}
+                </NavLink>
+            ),
         },
         {
             field: "num_games",
@@ -262,6 +265,21 @@ export default function HomePage() {
                         </CardContent>
                     </Card>
                 )}
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+                <NavLink to="/explore" style={{ textDecoration: "none" }}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        sx={{
+                            fontSize: "1rem",
+                            fontFamily: "'Press Start 2P', 'monospace'",
+                            textTransform: "none",
+                        }}
+                    >
+                        Explore More
+                    </Button>
+                </NavLink>
             </div>
             <Divider />
             <h2>Top Movies</h2>

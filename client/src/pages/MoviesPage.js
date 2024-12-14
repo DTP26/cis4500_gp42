@@ -214,7 +214,9 @@ export default function MoviesPage() {
               </Typography>
           )}
         </Container>
+
       </div>
+
   );
 
 

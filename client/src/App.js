@@ -6,8 +6,10 @@ import { createTheme } from "@mui/material/styles";
 import NavBar from './components/NavBar';
 import HomePage from './pages/HomePage';
 import MoviesPage from './pages/MoviesPage';
+import GameTimeMachinePage from './pages/GameTimeMachinePage'
 import GenresPage from './pages/GenresPage'
 import GamesPage from "./pages/GamesPage";
+import ExplorePage from "./pages/ExplorePage";
 
 // createTheme enables you to customize the look and feel of your app past the default
 // in this case, we only change the color scheme
@@ -30,6 +32,7 @@ export default function App() {
         <NavBar />
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/explore" element={<ExplorePage />} />
           <Route path="/movies" element={<MoviesPage />} />
           <Route path="/games" element={<GamesPage />} />
           <Route path="/games_by_genre/:genre" element={<GenresPage />} />
