@@ -123,7 +123,7 @@ export default function MediaExplorerPage() {
               marginTop: '20px',
             }}
           >
-            No trending media to display.
+            Loading...
           </Typography>
         )}
       </Carousel>

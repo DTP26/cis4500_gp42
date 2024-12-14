@@ -86,45 +86,48 @@ export default function HomePage() {
         };
     }, []);
 
-    const gameColumns = [
+    const gameGenreColumns = [
+        {
+            field: "genre",
+            headerName: "Genre",
+            renderCell: (row) => (
+                <NavLink to={`/games_by_genre/${row.name}`}
+                         style={{
+                    color: '#39ff14', // Neon green for unvisited linkse
+                }}>{"🎮  " + row.name}</NavLink>
+            )
+        },
+        {
+            field: "num_games",
+            headerName: "Number of Games",
+            renderCell: (row) => (
+                <span style={{ color: "#ffffff" }}>
+                    {row.num_games}
+                </span>
+            ),
+        },
+    ];
+
+    const movieColumns = [
         {
             field: "title",
             headerName: "Title",
             renderCell: (row) => (
                 <span style={{ color: "#ffffff" }}>
-                    {row.type === "game" ? "🎮 " : "🎬 "}
+                    {row.type === "game" ? "🎮  " : "🎬  "}
                     {row.title}
                 </span>
             ),
         },
         {
-            field: "reviews_count",
+            field: "num_votes",
             headerName: "Reviews Count",
-            renderCell: (row) => <span style={{ color: "#ffffff" }}>{row.reviews_count}</span>,
+            renderCell: (row) => <span style={{ color: "#ffffff" }}>{row.num_votes}</span>,
         },
         {
-            field: "game_rating",
-            headerName: "Rating",
-            renderCell: (row) => <span style={{ color: "#ffffff" }}>{row.game_rating}</span>,
-        },
-        {
-            field: "type",
-            headerName: "Type",
-            renderCell: (row) => <span style={{ color: "#ffffff" }}>{row.type}</span>,
-        },
-    ];
-
-    const albumColumns = [
-        {
-            field: "title",
-            headerName: "Album Title",
-            renderCell: (row) => (
-                <NavLink to={`/albums/${row.album_id}`}>{row.title}</NavLink>
-            ),
-        },
-        {
-            field: "plays",
-            headerName: "Plays",
+            field: "average_rating",
+            headerName: "Average Rating",
+            renderCell: (row) => <span style={{ color: "#ffffff" }}>{row.average_rating}</span>,
         },
     ];
 
@@ -261,19 +264,19 @@ export default function HomePage() {
                 )}
             </div>
             <Divider />
-            <h2>Trending Games</h2>
+            <h2>Top Movies</h2>
             <LazyTable
-                route={`http://${config.server_host}:${config.server_port}/important_games_movies/1000/50`}
-                columns={gameColumns}
+                route={`http://${config.server_host}:${config.server_port}/top_movies`}
+                columns={movieColumns}
                 style={{
                     color: "#ffffff",
                 }}
             />
             <Divider />
-            <h2>Trending Movies</h2>
+            <h2>Top Game Genres</h2>
             <LazyTable
-                route={`http://${config.server_host}:${config.server_port}/top_albums`}
-                columns={albumColumns}
+                route={`http://${config.server_host}:${config.server_port}/top_game_genres`}
+                columns={gameGenreColumns}
                 defaultPageSize={5}
                 rowsPerPageOptions={[5, 10]}
                 style={{
