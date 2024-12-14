@@ -120,6 +120,7 @@ const randomContent = async function (req, res) {
       query = `
         SELECT name AS title, released AS release_year, rating, background_image AS img
         FROM games
+        WHERE rating > 0.0
         ORDER BY RANDOM() 
         LIMIT 1;
       `;
@@ -315,11 +316,11 @@ const gamesByGenre = async function (req, res) {
   try {
     // SQL query to get all games that belong to a specific genre
     const query = `
-      SELECT g.name AS game_title, g.released AS release_year, g.rating, g.reviews_count, gg.name AS game_genre, background_image AS img
+      SELECT g.name AS game_title, g.released AS release_date, g.rating, g.reviews_count, gg.name AS game_genre, background_image AS img
       FROM games g
       JOIN game_genres gg ON gg.game_id = g.id
-      WHERE LOWER(gg.name) = LOWER($1)  -- Search for the genre in a case-insensitive way
-      ORDER BY g.released DESC  -- Order by release year in descending order
+      WHERE LOWER(gg.name) = LOWER($1) AND g.rating > 3.0
+      ORDER BY RANDOM()
       LIMIT 10;
     `;
 

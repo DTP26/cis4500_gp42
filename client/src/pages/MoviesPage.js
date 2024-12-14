@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Box, Container, Button, TextField, Typography } from '@mui/material';
 
 const config = require('../config.json');
@@ -96,7 +96,8 @@ export default function MoviesPage() {
 
   return (
       <div>
-        <h2 style={{ textAlign: 'center', fontFamily: "'Orbitron', sans-serif" }}>Movie2Game Engine</h2>
+        <h1 style={{ textAlign: 'center', fontFamily: "'Orbitron'," +
+                " sans-serif" }}>Movie2Game Engine</h1>
 
         {/* Input Field for Movie Title */}
         <Box m={3} textAlign="center">
