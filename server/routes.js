@@ -756,10 +756,10 @@ const topGameGenres = async function (req, res) {
 
   try {
     const query = `
-      SELECT name, MAX(games_count) AS numberOfGames
+      SELECT name, MAX(games_count) AS num_games
       FROM game_genres
       GROUP BY name
-      ORDER BY numberOfGames DESC
+      ORDER BY num_games DESC
       LIMIT $1;
     `;
 
