@@ -211,6 +211,7 @@ export default function MoviesPage() {
                         style={{
                             fontFamily: "'Orbitron', sans-serif",
                             color: '#ffffff',
+
                         }}
                     >
                         No games to display.
