@@ -62,7 +62,7 @@ export default function NavBar() {
                 >
                     <NavText href="/movies" text="MOVIES" color="#39ff14" />
                     <NavText href="/" text="HI SCORE!" isMain color="#ffffff"/>
-                    <NavText href="/games_by_genre/Action" text="GAMES" color="#004d00" />
+                    <NavText href="/games" text="GAMES" color="#004d00" />
                 </Toolbar>
             </Container>
         </AppBar>

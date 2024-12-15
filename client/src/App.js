@@ -7,8 +7,8 @@ import NavBar from './components/NavBar';
 import HomePage from './pages/HomePage';
 import MoviesPage from './pages/MoviesPage';
 import GenresPage from './pages/GenresPage'
-import GamesPage from "./pages/GamesPage";
 import ExplorePage from "./pages/ExplorePage";
+import GamesPage from "./pages/GamesPage";
 
 // createTheme enables you to customize the look and feel of your app past the default
 // in this case, we only change the color scheme
@@ -32,8 +32,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/explore" element={<ExplorePage />} />
-          <Route path="/movies" element={<MoviesPage />} />
-          <Route path="/games" element={<GamesPage />} />
+          <Route path="/movies" element={<GamesPage />} />
+          <Route path="/games" element={<MoviesPage />} />
           <Route path="/games_by_genre/:genre" element={<GenresPage />} />
         </Routes>
       </BrowserRouter>

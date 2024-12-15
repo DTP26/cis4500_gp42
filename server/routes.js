@@ -152,7 +152,7 @@ const randomContent = async function (req, res) {
 };
 
 
-// NONSENSICAL!!!!!!!!!!!!!
+// broken
 // Route: GET /important_games_movies/:x/:limit
 // Description: 
 // Returns the top 'limit' number of games and movies with more than 'x' reviews or votes, respectively, 
@@ -193,7 +193,7 @@ const importantGamesMovies = async function (req, res) {
       (SELECT
         ig.game_title AS title,  -- Title of the game
         ig.reviews_count AS reviews_count,  -- Number of reviews for the game
-        ig.rating AS game_rating,  -- Rating of the game
+        ig.rating * 2 AS game_rating,  -- Rating of the game
         'game' AS type  -- Indicate the type is a game
       FROM ImportantGames ig)
 
@@ -223,9 +223,6 @@ const importantGamesMovies = async function (req, res) {
     res.status(500).json({ error: 'An error occurred while fetching important games and movies.' });
   }
 };
-
-
-
 
 
 // Route: GET /games_movies_by_genre/:genre
@@ -335,11 +332,6 @@ const gamesByGenre = async function (req, res) {
   }
 };
 
-
-
-
-
-// NONSENSE
 // Route: GET /highest_avg_rating
 // Description: Finds the highest rated movie(s) and game(s) for the inputted year. 
 //              Results are grouped by release year, movie title, and game title.
@@ -403,8 +395,7 @@ const highestAvgRating = async function (req, res) {
   }
 };
 
-  
-// DOES NOT WORK!!!!
+
 // Title: Movies with a Number of Ratings
 // Parameters: number (number of ratings), game_title (title of the game to match genres)
 // Route: GET /movie_num_ratings/:number
@@ -418,10 +409,10 @@ const highestAvgRating = async function (req, res) {
 
 const movieNumRatings = async function (req, res) {
   const numRatings = parseInt(req.params.number, 10);
-  const gameTitle = req.query.game_title; // Game title to match genres
+  const gameTitle = req.query.game_title; // Game title to match movie titles
 
   // Validate required parameters
-  if (!gameTitle || !numRatings || numRatings <= 0) {
+  if (!gameTitle || isNaN(numRatings) || numRatings <= 0) {
     return res.status(400).json({
       error: 'Invalid parameters. Ensure "number" is a positive integer and "game_title" is specified.',
     });
@@ -429,29 +420,27 @@ const movieNumRatings = async function (req, res) {
 
   try {
     const query = `
-      
-        SELECT genres @> 'name'
-        FROM games g
-        WHERE g.name = $1
+      SELECT tb.primary_title AS title, tr.num_votes AS num_ratings
+      FROM title_basics tb
+      JOIN title_ratings tr ON tb.tconst = tr.tconst
+      WHERE tb.primary_title ILIKE '%' || $1 || '%' -- Find movies with titles similar to the game title
+        AND tr.num_votes >= $2 -- Filter by minimum number of ratings
+      ORDER BY tr.num_votes DESC;
     `;
 
-    const params = [gameTitle];
+    const params = [gameTitle, numRatings];
 
     // Execute the query
     const result = await connection.query(query, params);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No movies found with similar titles and sufficient ratings.' });
+    }
     res.json(result.rows); // Return the results as JSON
   } catch (err) {
-    console.error('Error executing movieNumRatings query:', err);
-    res.status(500).json({ error: 'An error occurred while fetching movies with shared genres.' });
+    console.error('Database error:', err.message, err.stack);
+    res.status(500).json({ error: 'An error occurred while fetching movies with similar titles.' });
   }
 };
-
-
-
-
-
-
-
 
 // Route: GET /ratings
 // Description: Fetches games or movies based on rating criteria. For movies, joins `title_ratings` and `title_basics`
@@ -491,37 +480,37 @@ const getRatings = async function (req, res) {
     const params = [];
 
     if (type === 'movies') {
-      // Movies query: Join `title_ratings` and `title_basics` to get `primary_title` and `average_rating`
+      // Movies query: Join `title_ratings` and `title_basics` to get `primary_title`, `average_rating`, and the `type`
       if (upper !== null && lower !== null) {
         query = `
-          SELECT tb.primary_title AS name, tr.average_rating AS rating
+          SELECT tb.primary_title AS name, tr.average_rating AS rating, 'movie' AS type
           FROM title_ratings tr
-          JOIN title_basics tb ON tr.tconst = tb.tconst
+                 JOIN title_basics tb ON tr.tconst = tb.tconst
           WHERE tr.average_rating BETWEEN $1 AND $2
-          ORDER BY tb.primary_title
-          ${limit ? 'LIMIT $3' : ''};
+          ORDER BY RANDOM()
+            ${limit ? 'LIMIT $3' : ''};
         `;
         params.push(Math.min(lower, upper), Math.max(lower, upper));
         if (limit) params.push(limit);
       } else if (upper !== null) {
         query = `
-          SELECT tb.primary_title AS name, tr.average_rating AS rating
+          SELECT tb.primary_title AS name, tr.average_rating AS rating, 'movie' AS type
           FROM title_ratings tr
-          JOIN title_basics tb ON tr.tconst = tb.tconst
+                 JOIN title_basics tb ON tr.tconst = tb.tconst
           WHERE tr.average_rating < $1
-          ORDER BY tb.primary_title
-          ${limit ? 'LIMIT $2' : ''};
+          ORDER BY RANDOM()
+            ${limit ? 'LIMIT $2' : ''};
         `;
         params.push(upper);
         if (limit) params.push(limit);
       } else if (lower !== null) {
         query = `
-          SELECT tb.primary_title AS name, tr.average_rating AS rating
+          SELECT tb.primary_title AS name, tr.average_rating AS rating, 'movie' AS type
           FROM title_ratings tr
-          JOIN title_basics tb ON tr.tconst = tb.tconst
+                 JOIN title_basics tb ON tr.tconst = tb.tconst
           WHERE tr.average_rating > $1
-          ORDER BY tb.primary_title
-          ${limit ? 'LIMIT $2' : ''};
+          ORDER BY RANDOM()
+            ${limit ? 'LIMIT $2' : ''};
         `;
         params.push(lower);
         if (limit) params.push(limit);
@@ -529,34 +518,34 @@ const getRatings = async function (req, res) {
         return res.status(400).json({ error: 'At least one of the bounds (upper or lower) must be specified.' });
       }
     } else if (type === 'games') {
-      // Games query
+      // Games query: Add the `type` field as 'game'
       if (upper !== null && lower !== null) {
         query = `
-          SELECT name, rating
+          SELECT name, rating, 'game' AS type
           FROM games
           WHERE rating BETWEEN $1 AND $2 AND name IS NOT NULL
-          ORDER BY name
-          ${limit ? 'LIMIT $3' : ''};
+          ORDER BY RANDOM()
+            ${limit ? 'LIMIT $3' : ''};
         `;
         params.push(Math.min(lower, upper), Math.max(lower, upper));
         if (limit) params.push(limit);
       } else if (upper !== null) {
         query = `
-          SELECT name, rating
+          SELECT name, rating, 'game' AS type
           FROM games
           WHERE rating < $1 AND name IS NOT NULL
-          ORDER BY name
-          ${limit ? 'LIMIT $2' : ''};
+          ORDER BY RANDOM()
+            ${limit ? 'LIMIT $2' : ''};
         `;
         params.push(upper);
         if (limit) params.push(limit);
       } else if (lower !== null) {
         query = `
-          SELECT name, rating
+          SELECT name, rating, 'game' AS type
           FROM games
           WHERE rating > $1 AND name IS NOT NULL
-          ORDER BY name
-          ${limit ? 'LIMIT $2' : ''};
+          ORDER BY RANDOM()
+            ${limit ? 'LIMIT $2' : ''};
         `;
         params.push(lower);
         if (limit) params.push(limit);
@@ -667,39 +656,6 @@ const containing = async function (req, res) {
   }
 };
 
-
-
-
-
-////////////// Completely Nonsensical
-// Route: GET /age_appropriate_games
-// Description: Fetches all games rated "Everyone" based on their ESRB rating, ordered by rating in descending order.
-// The `esrb_rating` field is assumed to be a JSONB column, so this query extracts the "name" property.
-// Parameters: None
-// Example Input:
-//   - Fetch all games rated "Everyone":
-//     http://localhost:8080/age_appropriate_games
-
-// THEY ALL ARE NULL!!!!!!!!!!!!!
-
-// const ageAppropriateGames = async function (req, res) {
-//   try {
-//     const query = `
-//       SELECT name, rating
-//       FROM games
-//       WHERE esrb_rating IS NOT NULL AND esrb_rating->>'name' = 'Everyone'
-//       ORDER BY rating DESC;
-//     `;
-
-//     const result = await connection.query(query);
-//     res.json(result.rows); // Return the results as JSON
-//   } catch (err) {
-//     console.error('Error executing ageAppropriateGames query:', err);
-//     res.status(500).json({ error: 'An error occurred while fetching age-appropriate games.' });
-//   }
-// };
-
-
 // Route: GET /top-movies
 // Description: Fetches the top movies sorted by the number of votes in descending order. 
 //              Allows for an optional `limit` parameter to control the number of results returned.
@@ -769,10 +725,10 @@ const topGameGenres = async function (req, res) {
   }
 };
 
-// Need to fix, not working - movieNumRatings, highestAvgRating
+// Need to fix, not working - movieNumRatings
 module.exports = { 
   helloWorld, 
-  movieNumRatings, 
+  movieNumRatings,
   highestAvgRating, 
   getRatings, 
   containing,  
